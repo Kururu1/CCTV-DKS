@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FACE RECOGNITION SYSTEM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg: #050a0f;
+    --panel: #080e17;
+    --border: #0d2135;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --green: #00ff88;
+    --red: #ff2d55;
+    --orange: #ffaa00;
+    --yellow: #ffe600;
+    --text: #c8e6f5;
+    --text-dim: #4a7a9b;
+    --grid: rgba(0,229,255,0.04);
+    --glow: 0 0 20px rgba(0,229,255,0.3);
+    --glow-red: 0 0 20px rgba(255,45,85,0.4);
+    --glow-green: 0 0 20px rgba(0,255,136,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none; z-index: 1000;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; border-bottom: 1px solid var(--border);
+    background: rgba(8,14,23,0.95); position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .header-logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 36px; height: 36px; border: 2px solid var(--accent); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--glow); animation: pulse-logo 2s infinite;
+  }
+  @keyframes pulse-logo { 0%,100% { box-shadow: 0 0 10px rgba(0,229,255,0.3); } 50% { box-shadow: 0 0 30px rgba(0,229,255,0.8); } }
+  .logo-icon svg { width: 20px; height: 20px; fill: var(--accent); }
+  .logo-title { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 900; color: var(--accent); letter-spacing: 3px; text-shadow: var(--glow); }
+  .logo-sub { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; }
+
+  .header-status { display: flex; align-items: center; gap: 20px; }
+  .status-badge {
+    display: flex; align-items: center; gap: 8px; padding: 6px 16px;
+    border: 1px solid; font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; transition: all 0.3s;
+  }
+  .status-badge.idle { border-color: var(--text-dim); color: var(--text-dim); }
+  .status-badge.scan, .status-badge.wait-confirm { border-color: var(--yellow); color: var(--yellow); box-shadow: 0 0 15px rgba(255,230,0,0.3); }
+  .status-badge.run { border-color: var(--green); color: var(--green); box-shadow: var(--glow-green); }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .dot.blink { animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .clock { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--text-dim); }
+
+  /* MAIN LAYOUT (DESKTOP) */
+  .main { display: grid; grid-template-columns: 280px 1fr 300px; gap: 1px; height: calc(100vh - 61px); background: var(--border); }
+
+  /* PANELS */
+  .panel { background: var(--panel); padding: 16px; overflow-y: auto; }
+  .panel::-webkit-scrollbar { width: 4px; } .panel::-webkit-scrollbar-thumb { background: var(--border); }
+  .panel-title {
+    font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700; letter-spacing: 3px;
+    color: var(--text-dim); margin-bottom: 16px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title::before { content: ''; width: 3px; height: 12px; background: var(--accent); box-shadow: var(--glow); }
+
+  /* CENTER - CAMERA */
+  .camera-area { background: #000; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .cam-feed { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #live-view { width: 100%; height: 100%; object-fit: contain; display: none; }
+  .cam-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--text-dim); position: absolute; inset: 0; }
+  .cam-placeholder svg { width: 64px; height: 64px; opacity: 0.3; }
+  .cam-placeholder p { font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+
+  /* SCAN OVERLAY */
+  .scan-overlay { position: absolute; inset: 0; pointer-events: none; display: none; }
+  .scan-overlay.active { display: block; }
+  .corner { position: absolute; width: 30px; height: 30px; }
+  .corner.tl { top: 20px; left: 20px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); }
+  .corner.tr { top: 20px; right: 20px; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+  .corner.bl { bottom: 20px; left: 20px; border-bottom: 2px solid var(--accent); border-left: 2px solid var(--accent); }
+  .corner.br { bottom: 20px; right: 20px; border-bottom: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 2px; top: 0;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent); box-shadow: 0 0 10px var(--accent);
+    animation: scan-move 2s linear infinite;
+  }
+  @keyframes scan-move { 0% { top: 10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
+
+  /* CAM CONTROLS */
+  .cam-controls { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #030609; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .cam-id-badge { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin-right: auto; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 8px 18px; border: 1px solid; background: transparent; cursor: pointer;
+    font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; transition: all 0.2s; position: relative; overflow: hidden; text-transform: uppercase;
+  }
+  .btn::after { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity 0.2s; }
+  .btn:hover::after { opacity: 0.1; } .btn:active { transform: scale(0.97); }
+  .btn-accent { border-color: var(--accent); color: var(--accent); } .btn-accent:hover { box-shadow: var(--glow); }
+  .btn-green { border-color: var(--green); color: var(--green); } .btn-green:hover { box-shadow: var(--glow-green); }
+  .btn-red { border-color: var(--red); color: var(--red); } .btn-red:hover { box-shadow: var(--glow-red); }
+  .btn-orange { border-color: var(--orange); color: var(--orange); }
+  .btn-yellow { border-color: var(--yellow); color: var(--yellow); }
+  .btn-dim { border-color: var(--text-dim); color: var(--text-dim); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* LEFT PANEL - CONTROLS */
+  .control-section { margin-bottom: 20px; }
+  .section-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 10px; }
+  .control-btn {
+    width: 100%; padding: 12px 16px; margin-bottom: 6px; border: 1px solid var(--border); background: transparent;
+    color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden;
+  }
+  .control-btn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--text-dim); transition: background 0.2s; }
+  .control-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.05); }
+  .control-btn:hover::before { background: var(--accent); }
+  .control-btn.active-mode { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.05); }
+  .control-btn.active-mode::before { background: var(--green); }
+  .control-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* SCAN FORM */
+  .scan-form { display: none; } .scan-form.visible { display: block; }
+  .input-group { margin-bottom: 12px; }
+  .input-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 6px; }
+  .input-field {
+    width: 100%; background: #030609; border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; font-family: 'Share Tech Mono', monospace; font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+  /* DIRECTION INDICATORS */
+  .direction-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; width: 160px; height: 160px; margin: 16px auto; }
+  .dir-cell {
+    display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);
+    font-family: 'Orbitron', monospace; font-size: 8px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); transition: all 0.3s;
+  }
+  .dir-cell.empty { border: none; background: transparent; }
+  .dir-cell.waiting { border-color: var(--border); color: var(--text-dim); }
+  .dir-cell.active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,230,0,0.1); animation: pulse-cell 0.5s infinite; }
+  .dir-cell.done { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.1); }
+  @keyframes pulse-cell { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .scan-progress { margin-top: 8px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); text-align: center; }
+  .progress-bar-wrap { height: 4px; background: var(--border); margin-top: 8px; position: relative; overflow: hidden; }
+  .progress-bar-fill { height: 100%; width: 0%; background: var(--green); box-shadow: var(--glow-green); transition: width 0.4s; }
+
+  /* CAMERA SWITCH */
+  .cam-switch { display: flex; gap: 4px; }
+  .cam-opt {
+    flex: 1; padding: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .cam-opt.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.08); }
+
+  /* RIGHT PANEL - DATABASE + LOG */
+  .tab-bar { display: flex; margin-bottom: 16px; gap: 1px; border-bottom: 1px solid var(--border); }
+  .tab {
+    flex: 1; padding: 8px 4px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-dim);
+    font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; transition: all 0.2s;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; } .tab-content.active { display: block; }
+
+  /* PERSON CARDS */
+  .person-card {
+    display: flex; align-items: center; gap: 10px; padding: 10px; margin-bottom: 6px;
+    border: 1px solid var(--border); background: rgba(0,0,0,0.3); transition: all 0.2s;
+  }
+  .person-card:hover { border-color: var(--accent); background: rgba(0,229,255,0.04); }
+  .person-card.present { border-color: var(--green); background: rgba(0,255,136,0.05); }
+  .person-card.intruder { border-color: var(--orange); background: rgba(255,165,0,0.05); }
+  .person-avatar { width: 40px; height: 40px; border: 1px solid var(--border); background: #030609; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+  .person-avatar img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+  .person-avatar img:hover { transform: scale(1.1); }
+  .person-avatar svg { width: 20px; height: 20px; fill: var(--text-dim); }
+  .person-info { flex: 1; min-width: 0; }
+  .person-name { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .person-meta { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .person-status { font-family: 'Orbitron', monospace; font-size: 8px; font-weight: 700; padding: 3px 8px; letter-spacing: 1px; border: 1px solid; flex-shrink: 0; }
+  .status-in { border-color: var(--green); color: var(--green); }
+  .status-out { border-color: var(--text-dim); color: var(--text-dim); }
+  .status-intruder { border-color: var(--orange); color: var(--orange); }
+
+  /* LOG ENTRIES */
+  .log-entry {
+    display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; margin-bottom: 3px;
+    border-left: 2px solid var(--border); font-family: 'Share Tech Mono', monospace; font-size: 11px; line-height: 1.5;
+  }
+  .log-entry.masuk { border-left-color: var(--green); } .log-entry.keluar { border-left-color: var(--text-dim); }
+  .log-entry.unknown { border-left-color: var(--red); } .log-entry.system { border-left-color: var(--accent); }
+  .log-entry.scan { border-left-color: var(--yellow); }
+  .log-time { color: var(--text-dim); flex-shrink: 0; width: 65px; } .log-name { color: var(--text); font-weight: bold; }
+  .log-action { color: var(--text-dim); font-size: 10px; margin-top: 2px; }
+  .log-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; margin-top: 4px; }
+
+  /* STATS BAR */
+  .stats-bar { display: flex; flex-wrap: wrap; gap: 1px; background: var(--border); border-top: 1px solid var(--border); }
+  .stat-block { flex: 1; background: var(--panel); padding: 8px 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .stat-val { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 900; color: var(--accent); text-shadow: var(--glow); }
+  .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+
+  /* ACTIVE SESSIONS & EMPTY STATES */
+  .session-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 4px; border: 1px solid rgba(0,255,136,0.2); background: rgba(0,255,136,0.03); font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+  .session-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1s infinite; }
+  .session-name { color: var(--green); flex: 1; } .session-type { color: var(--text-dim); font-size: 9px; }
+  .empty-state { text-align: center; padding: 30px; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; font-size: 11px; line-height: 2; }
+  .empty-state svg { width: 40px; height: 40px; opacity: 0.2; margin-bottom: 12px; }
+
+  .separator { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+  /* ALERT BANNER */
+  .alert-banner { display: none; padding: 8px 14px; font-family: 'Orbitron', monospace; font-size: 10px; letter-spacing: 2px; font-weight: 700; text-align: center; animation: blink-bg 0.8s infinite; }
+  .alert-banner.active { display: block; }
+  .alert-banner.alert-intruder { background: rgba(255,45,85,0.15); color: var(--red); border-bottom: 1px solid var(--red); }
+  @keyframes blink-bg { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* IMAGE POPUP MODAL CSS (DIPERBESAR) */
+  .img-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+    z-index: 2000; display: none; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .img-modal-overlay.active { display: flex; opacity: 1; }
+  
+  .img-modal-content {
+    background: var(--panel); padding: 20px; border: 1px solid var(--accent); 
+    box-shadow: 0 0 40px rgba(0, 229, 255, 0.4);
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    transform: scale(0.9); transition: transform 0.3s ease;
+    width: 450px; /* Lebar modal diperbesar */
+    max-width: 90vw;
+  }
+  .img-modal-overlay.active .img-modal-content { transform: scale(1); }
+  
+  .img-modal-content img {
+    width: 100%; 
+    height: 350px; /* Tinggi gambar diperbesar */
+    border: 1px solid var(--border); 
+    object-fit: contain; 
+    background: #030609; 
+    image-rendering: -webkit-optimize-contrast; 
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* RESPONSIVE DESIGN */
+  @media (max-width: 1024px) {
+    .header { flex-direction: column; gap: 12px; text-align: center; }
+    .main { display: flex; flex-direction: column; height: auto; }
+    .camera-area { order: -1; height: 45vh; min-height: 350px; }
+    .panel { height: 400px; overflow-y: auto; }
+    .stat-block { min-width: 45%; }
+  }
+  @media (max-width: 480px) {
+    .stat-block { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="alert-banner alert-intruder" id="alert-banner">
+  ⚠ PENYUSUP TERDETEKSI — AKSI DIPERLUKAN ⚠
+</div>
+
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    </div>
+    <div>
+      <div class="logo-title">FACE RECOGNITION SYSTEM</div>
+      <div class="logo-sub">INSIGHTFACE · BUFFALO_L · v2.1</div>
+    </div>
+  </div>
+  <div class="header-status">
+    <div id="header-mode-badge" class="status-badge idle">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text">IDLE</span>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-block"><div class="stat-val" id="stat-known">0</div><div class="stat-label">TERDAFTAR</div></div>
+  <div class="stat-block"><div class="stat-val" style="color:var(--orange)" id="stat-unknown">0</div><div class="stat-label">UNKNOWN</div></div>
+  <div class="stat-block"><div class="stat-val" style="color:var(--green)" id="stat-present">0</div><div class="stat-label">HADIR</div></div>
+  <div class="stat-block"><div class="stat-val" style="color:var(--red)" id="stat-intruder">0</div><div class="stat-label">PENYUSUP</div></div>
+</div>
+
+<div class="main">
+  <!-- LEFT PANEL -->
+  <div class="panel">
+    <div class="panel-title">KONTROL SISTEM</div>
+    
+    <div class="control-section">
+      <div class="section-label">KAMERA</div>
+      <div class="cam-switch">
+        <button class="cam-opt active" id="cam-0" onclick="switchCam(0)">CAM PC</button>
+        <button class="cam-opt" id="cam-1" onclick="switchCam(1)">CCTV</button>
+      </div>
+    </div>
+    <hr class="separator">
+
+    <div class="control-section">
+      <div class="section-label">MODE OPERASI</div>
+      <button class="control-btn" id="btn-scan" onclick="startScanFlow()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg> DAFTARKAN WAJAH
+      </button>
+      <button class="control-btn" id="btn-run" onclick="startCCTV()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg> MODE CCTV
+      </button>
+      <button class="control-btn" id="btn-reload" onclick="reloadDB()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> RELOAD DATABASE
+      </button>
+      <button class="control-btn btn-idle" id="btn-stop" onclick="stopSystem()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> STOP / IDLE
+      </button>
+    </div>
+    <hr class="separator">
+
+    <!-- SCAN FORM -->
+    <div id="scan-form" class="scan-form">
+      <div class="section-label">REGISTRASI WAJAH BARU</div>
+      <div id="scan-step-input">
+        <div class="input-group">
+          <label class="input-label">NAMA USER BARU</label>
+          <input type="text" class="input-field" id="scan-name-input" placeholder="Masukkan nama..." />
+        </div>
+        <button class="btn btn-yellow" style="width:100%;margin-bottom:6px" onclick="confirmScanName()">KONFIRMASI NAMA →</button>
+        <button class="btn btn-dim" style="width:100%" onclick="cancelScan()">BATAL SCAN</button>
+      </div>
+
+      <div id="scan-step-scan" style="display:none">
+        <div style="text-align:center;margin-bottom:8px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent)">SCANNING: <span id="scan-name-display" style="color:var(--yellow)"></span></span>
+        </div>
+        <div class="direction-grid">
+          <div class="dir-cell empty"></div><div class="dir-cell waiting" id="dir-UP">UP</div><div class="dir-cell empty"></div>
+          <div class="dir-cell waiting" id="dir-LEFT">LEFT</div><div class="dir-cell waiting" id="dir-CENTER">CTR</div><div class="dir-cell waiting" id="dir-RIGHT">RIGHT</div>
+          <div class="dir-cell empty"></div><div class="dir-cell waiting" id="dir-DOWN">DOWN</div><div class="dir-cell empty"></div>
+        </div>
+        <div class="scan-progress"><span id="scan-progress-text">0 / 5 ARAH</span></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="scan-progress-bar"></div></div>
+        
+        <div style="margin-top:12px;padding:8px;border:1px solid var(--border);background:#030609">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-bottom:6px">INSTRUKSI SCAN:</div>
+          <div id="scan-instruction" style="font-family:'Rajdhani',sans-serif;font-size:13px;color:var(--yellow);font-weight:600;text-align:center;padding:8px">Hadapkan wajah ke arah yang ditunjukkan</div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button class="btn btn-green" style="flex:1" id="btn-start-scan" onclick="beginScan()">MULAI SCAN</button>
+          <button class="btn btn-dim" onclick="cancelScan()">KEMBALI</button>
+        </div>
+      </div>
+    </div>
+    <hr class="separator">
+
+    <div class="control-section">
+      <div class="section-label">SESI AKTIF</div>
+      <div id="active-sessions-list">
+        <div class="empty-state" style="padding:16px"><div style="font-size:10px">Tidak ada sesi aktif</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER PANEL -->
+  <div class="camera-area">
+    <div class="cam-feed" id="cam-feed">
+      <div class="cam-placeholder" id="cam-placeholder">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+        <p>KAMERA TIDAK AKTIF</p>
+        <p style="font-size:10px;margin-top:4px">Tekan MODE CCTV atau DAFTARKAN WAJAH</p>
+      </div>
+
+      <img id="live-view" src="" alt="live stream" />
+
+      <div class="scan-overlay" id="scan-overlay">
+        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+        <div class="scan-line"></div>
+      </div>
+
+      <div id="wait-confirm-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;flex-direction:column;gap:16px">
+        <div style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--yellow);text-shadow:0 0 30px rgba(255,230,0,0.6)">READY: <span id="wait-name-display"></span></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;color:#fff;letter-spacing:2px">TEKAN KLIK "MULAI SCAN" UNTUK MEMULAI</div>
+      </div>
+    </div>
+
+    <div class="cam-controls">
+      <span class="cam-id-badge" id="cam-id-badge">CAM: 0 | RES: 640×480</span>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('tab-known', this)">TERDAFTAR</button>
+      <button class="tab" onclick="switchTab('tab-unknown', this)">UNKNOWN</button>
+      <button class="tab" onclick="switchTab('tab-log', this)">LOG</button>
+    </div>
+
+    <div class="tab-content active" id="tab-known">
+      <div id="known-list"></div>
+    </div>
+    <div class="tab-content" id="tab-unknown">
+      <div id="unknown-list"></div>
+    </div>
+    <div class="tab-content" id="tab-log">
+      <div id="log-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL POP-UP GAMBAR -->
+<div id="img-modal" class="img-modal-overlay" onclick="closeImgModal()">
+  <div class="img-modal-content" onclick="event.stopPropagation()">
+    <div style="font-family:'Orbitron',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;width:100%;text-align:left;border-bottom:1px solid var(--border);padding-bottom:8px;">
+      DETAIL WAJAH
+    </div>
+    <img id="img-modal-src" src="" alt="Face Detail" />
+    <button class="btn btn-dim" style="width:100%" onclick="closeImgModal()">TUTUP</button>
+  </div>
+</div>
+
+<script>
+// =============================================
+// API INTEGRATION
+// =============================================
+const API_URL = window.location.origin; 
+let mode = 'IDLE';
+let camActive = false;
+
+async function sendCmd(cmd, data={}) {
+  try {
+    await fetch(`${API_URL}/command`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({cmd, data})
+    });
+  } catch(e) { console.error("Gagal terhubung ke Backend Python", e); }
+}
+
+setInterval(updateClock, 1000);
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toTimeString().split(' ')[0];
+}
+
+// =============================================
+// POP-UP GAMBAR
+// =============================================
+function showImgModal(src) {
+  document.getElementById('img-modal-src').src = src;
+  document.getElementById('img-modal').classList.add('active');
+}
+function closeImgModal() {
+  document.getElementById('img-modal').classList.remove('active');
+  setTimeout(() => document.getElementById('img-modal-src').src = '', 300);
+}
+
+// =============================================
+// CAMERA CONTROLS
+// =============================================
+function switchCam(id) {
+  document.querySelectorAll('.cam-opt').forEach((b, i) => b.className = 'cam-opt' + (i === id ? ' active' : ''));
+  document.getElementById('cam-id-badge').textContent = `CAM: ${id} | RES: 640×480`;
+  sendCmd('switch_cam', {cam_id: id});
+}
+
+function activateCamera() {
+  const placeholder = document.getElementById('cam-placeholder');
+  const liveView = document.getElementById('live-view');
+  placeholder.style.display = 'none';
+  liveView.style.display = 'block';
+  if (!camActive) {
+    liveView.src = `${API_URL}/stream?t=${Date.now()}`;
+    camActive = true;
+  }
+}
+
+function deactivateCamera() {
+  const placeholder = document.getElementById('cam-placeholder');
+  const liveView = document.getElementById('live-view');
+  placeholder.style.display = 'flex';
+  liveView.style.display = 'none';
+  liveView.src = "";
+  camActive = false;
+}
+
+// =============================================
+// MODES
+// =============================================
+function setMode(m) {
+  mode = m;
+  const badge = document.getElementById('header-mode-badge');
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+
+  badge.className = 'status-badge ' + m.toLowerCase().replace('_', '-');
+  text.textContent = m.replace('_', ' ');
+  dot.className = 'dot' + (m !== 'IDLE' ? ' blink' : '');
+
+  document.getElementById('btn-run').className = 'control-btn' + (m === 'RUN' ? ' active-mode' : '');
+  document.getElementById('btn-scan').className = 'control-btn' + (m === 'SCAN' || m === 'WAIT_CONFIRM' ? ' active-mode' : '');
+
+  if (m === 'RUN' || m === 'SCAN' || m === 'WAIT_CONFIRM') {
+    activateCamera();
+  } else {
+    deactivateCamera();
+  }
+}
+
+function startCCTV() { sendCmd('set_mode', {mode: 'RUN'}); }
+function stopSystem() { 
+  sendCmd('stop'); 
+  document.getElementById('scan-form').classList.remove('visible');
+  document.getElementById('scan-overlay').classList.remove('active');
+  document.getElementById('wait-confirm-overlay').style.display = 'none';
+}
+function reloadDB() { sendCmd('reload_db'); }
+
+// =============================================
+// REGISTRATION
+// =============================================
+function startScanFlow() {
+  document.getElementById('scan-form').classList.add('visible');
+  document.getElementById('scan-step-input').style.display = 'block';
+  document.getElementById('scan-step-scan').style.display = 'none';
+  document.getElementById('scan-name-input').value = '';
+  document.getElementById('scan-name-input').focus();
+}
+
+function confirmScanName() {
+  const scanName = document.getElementById('scan-name-input').value.trim();
+  if (!scanName) return;
+  document.getElementById('scan-step-input').style.display = 'none';
+  document.getElementById('scan-step-scan').style.display = 'block';
+  document.getElementById('scan-name-display').textContent = scanName;
+  document.getElementById('wait-name-display').textContent = scanName.toUpperCase();
+  document.getElementById('wait-confirm-overlay').style.display = 'flex';
+  document.getElementById('scan-overlay').classList.add('active');
+  sendCmd('scan_start', {name: scanName});
+}
+
+function beginScan() {
+  document.getElementById('wait-confirm-overlay').style.display = 'none';
+  sendCmd('scan_begin');
+}
+
+function cancelScan() {
+  sendCmd('stop');
+  document.getElementById('scan-form').classList.remove('visible');
+  document.getElementById('scan-overlay').classList.remove('active');
+  document.getElementById('wait-confirm-overlay').style.display = 'none';
+}
+
+// =============================================
+// POLLING (Menerima Data Realtime)
+// =============================================
+setInterval(async () => {
+  try {
+    const res = await fetch(`${API_URL}/state`);
+    const state = await res.json();
+    updateUI(state);
+  } catch(e) {}
+}, 300);
+
+setInterval(async () => {
+  try {
+    const res = await fetch(`${API_URL}/logs`);
+    const data = await res.json();
+    renderLog(data.logs);
+  } catch(e) {}
+}, 1000);
+
+function updateUI(state) {
+  if (mode !== state.mode) {
+    setMode(state.mode);
+  }
+
+  // Scan progress
+  if (state.mode === 'SCAN') {
+    const sp = state.scan_progress;
+    ['LEFT', 'RIGHT', 'UP', 'DOWN', 'CENTER'].forEach(d => {
+      const el = document.getElementById('dir-' + d);
+      if (sp.captured.includes(d)) el.className = 'dir-cell done';
+      else if (sp.current_dir === d) el.className = 'dir-cell active';
+      else el.className = 'dir-cell waiting';
+    });
+    document.getElementById('scan-progress-text').textContent = `${sp.captured.length} / 5 ARAH`;
+    document.getElementById('scan-progress-bar').style.width = `${sp.captured.length * 20}%`;
+    if (sp.current_dir) document.getElementById('scan-instruction').textContent = `Hadapkan wajah ke: ${sp.current_dir}`;
+  }
+
+  // Stats
+  const statKnown = state.known_db.length;
+  const statUnknown = state.unknown_db.length;
+  const actNames = Object.keys(state.active_sessions);
+  const statPresent = actNames.filter(n => state.known_db.includes(n)).length;
+  const statIntruder = actNames.filter(n => !state.known_db.includes(n)).length;
+
+  document.getElementById('stat-known').textContent = statKnown;
+  document.getElementById('stat-unknown').textContent = statUnknown;
+  document.getElementById('stat-present').textContent = statPresent;
+  document.getElementById('stat-intruder').textContent = statIntruder;
+
+  // DB rendering
+  renderKnown(state.known_db, state.active_sessions);
+  renderUnknown(state.unknown_db);
+  updateSessionsList(state.active_sessions, state.known_db);
+
+  document.getElementById('alert-banner').className = 'alert-banner alert-intruder' + (statIntruder > 0 ? ' active' : '');
+}
+
+function renderKnown(names, activeSessions) {
+  const container = document.getElementById('known-list');
+  if (names.length === 0) {
+    container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg><div>Belum ada data terdaftar</div></div>`;
+    return;
+  }
+  
+  // Urutkan nama abjad A-Z
+  names.sort((a, b) => a.localeCompare(b));
+
+  container.innerHTML = names.map(name => {
+    const isPresent = name in activeSessions;
+    return `
+    <div class="person-card ${isPresent ? 'present' : ''}">
+      <div class="person-avatar">
+        <img src="${API_URL}/known_image/${name}/CENTER" 
+             onerror="this.style.display='none'" 
+             onclick="showImgModal(this.src); event.stopPropagation();" 
+             style="cursor: zoom-in;" 
+             title="Klik untuk memperbesar">
+      </div>
+      <div class="person-info">
+        <div class="person-name">${name}</div>
+        <div class="person-meta">TERDAFTAR</div>
+      </div>
+      <div class="person-status ${isPresent ? 'status-in' : 'status-out'}">${isPresent ? 'HADIR' : 'OUT'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderUnknown(ids) {
+  const container = document.getElementById('unknown-list');
+  if (ids.length === 0) {
+    container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg><div>Tidak ada unknown</div></div>`;
+    return;
+  }
+
+  // LOGIKA PENGURUTAN NUMERIK UNTUK UNKNOWN (U1, U2, ... U10, U11)
+  ids.sort((a, b) => {
+    // Menghapus semua karakter non-angka dan mengkonversinya ke Integer
+    let numA = parseInt(a.replace(/\D/g, '')) || 0;
+    let numB = parseInt(b.replace(/\D/g, '')) || 0;
+    return numA - numB;
+  });
+
+  container.innerHTML = ids.map(id => {
+    return `
+    <div class="person-card intruder">
+      <div class="person-avatar">
+        <img src="${API_URL}/unknown_image/${id}" 
+             onerror="this.style.display='none'" 
+             onclick="showImgModal(this.src); event.stopPropagation();" 
+             style="cursor: zoom-in;" 
+             title="Klik untuk memperbesar">
+      </div>
+      <div class="person-info">
+        <div class="person-name" style="color:var(--orange)">${id}</div>
+        <div class="person-meta">UNKNOWN</div>
+      </div>
+      <div class="person-status status-intruder">PENYUSUP</div>
+    </div>`;
+  }).join('');
+}
+
+function updateSessionsList(sessions, knownDB) {
+  const container = document.getElementById('active-sessions-list');
+  const names = Object.keys(sessions);
+  if (names.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="padding:16px"><div style="font-size:10px">Tidak ada sesi aktif</div></div>`;
+    return;
+  }
+  container.innerHTML = names.map(name => {
+    const isKnown = knownDB.includes(name);
+    const type = isKnown ? 'TERDAFTAR' : 'PENYUSUP';
+    const color = isKnown ? 'var(--green)' : 'var(--orange)';
+    return `<div class="session-item">
+      <div class="session-dot" style="background:${color}"></div>
+      <span class="session-name" style="color:${color}">${name}</span>
+      <span class="session-type">${type}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderLog(logEntries) {
+  const container = document.getElementById('log-list');
+  if (!logEntries || logEntries.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div>Log kosong</div></div>`;
+    return;
+  }
+  container.innerHTML = logEntries.reverse().slice(0, 80).map(e => {
+    let cls = 'system';
+    if (e.action === 'MASUK') cls = 'masuk';
+    else if (e.action === 'KELUAR') cls = 'keluar';
+    else if (e.status === 'PENYUSUP') cls = 'unknown';
+
+    let dotColor = 'var(--text-dim)';
+    if (cls === 'masuk') dotColor = 'var(--green)';
+    else if (cls === 'unknown') dotColor = 'var(--red)';
+    else if (cls === 'system') dotColor = 'var(--accent)';
+
+    return `<div class="log-entry ${cls}">
+      <div class="log-dot" style="background:${dotColor}"></div>
+      <div>
+        <span class="log-time">${e.time}</span><span class="log-name"> ${e.name}</span>
+        <div class="log-action">${e.status} — ${e.action}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
