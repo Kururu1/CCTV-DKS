@@ -275,6 +275,87 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); }
 
+  /* UPLOAD MODAL */
+  .upload-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px);
+    z-index: 3000; display: none; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .upload-modal-overlay.active { display: flex; opacity: 1; }
+  .upload-modal-content {
+    background: var(--panel); padding: 24px; border: 1px solid var(--accent);
+    box-shadow: 0 0 50px rgba(0,229,255,0.3); display: flex; flex-direction: column; gap: 16px;
+    width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    transform: scale(0.92); transition: transform 0.3s ease;
+  }
+  .upload-modal-overlay.active .upload-modal-content { transform: scale(1); }
+  .upload-modal-title {
+    font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700; color: var(--accent);
+    letter-spacing: 3px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+  }
+  .upload-drop-zone {
+    border: 2px dashed var(--border); background: #030609; padding: 32px 20px;
+    text-align: center; cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .upload-drop-zone:hover, .upload-drop-zone.dragover {
+    border-color: var(--accent); background: rgba(0,229,255,0.05);
+    box-shadow: var(--glow);
+  }
+  .upload-drop-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-drop-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.6; }
+  .upload-drop-text { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+  .upload-drop-text strong { color: var(--accent); }
+  .upload-ext-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+  .upload-ext-badge {
+    font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 3px 8px;
+    border: 1px solid var(--border); color: var(--text-dim); letter-spacing: 1px;
+  }
+  .upload-ext-badge.img { border-color: var(--accent); color: var(--accent); }
+  .upload-ext-badge.vid { border-color: var(--orange); color: var(--orange); }
+  .upload-preview {
+    display: none; flex-direction: column; align-items: center; gap: 10px;
+    padding: 16px; border: 1px solid var(--border); background: #030609;
+  }
+  .upload-preview.visible { display: flex; }
+  .upload-preview img, .upload-preview video {
+    max-width: 100%; max-height: 180px; object-fit: contain; border: 1px solid var(--border);
+  }
+  .upload-file-info {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); text-align: center;
+  }
+  .upload-status {
+    font-family: 'Share Tech Mono', monospace; font-size: 12px; text-align: center;
+    padding: 10px; border: 1px solid var(--border); display: none;
+  }
+  .upload-status.visible { display: block; }
+  .upload-status.success { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.07); }
+  .upload-status.error { border-color: var(--red); color: var(--red); background: rgba(255,45,85,0.07); }
+  .upload-status.loading { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.05); }
+  .upload-progress-bar-wrap { height: 3px; background: var(--border); overflow: hidden; width: 100%; display: none; }
+  .upload-progress-bar-wrap.visible { display: block; }
+  .upload-progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; box-shadow: var(--glow); }
+
+  /* SHUTDOWN CONFIRM */
+  .shutdown-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+    z-index: 4000; display: none; align-items: center; justify-content: center;
+  }
+  .shutdown-overlay.active { display: flex; }
+  .shutdown-box {
+    background: var(--panel); border: 2px solid var(--red); padding: 32px;
+    text-align: center; box-shadow: var(--glow-red); max-width: 380px; width: 90%;
+  }
+  .shutdown-icon { font-size: 48px; margin-bottom: 16px; animation: pulse-red 1s infinite; }
+  @keyframes pulse-red { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .shutdown-title {
+    font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 900;
+    color: var(--red); letter-spacing: 3px; margin-bottom: 12px; text-shadow: var(--glow-red);
+  }
+  .shutdown-msg { font-family: 'Rajdhani', sans-serif; font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
+  .shutdown-btns { display: flex; gap: 10px; justify-content: center; }
+
   /* RESPONSIVE DESIGN */
   @media (max-width: 1024px) {
     .header { flex-direction: column; gap: 12px; text-align: center; }
@@ -339,6 +420,9 @@
       <button class="control-btn" id="btn-scan" onclick="startScanFlow()">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg> DAFTARKAN WAJAH
       </button>
+      <button class="control-btn" onclick="openUploadModal()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-2 7v-3H9l3-3 3 3h-2v3h-2z"/></svg> DAFTAR VIA UPLOAD
+      </button>
       <button class="control-btn" id="btn-run" onclick="startCCTV()">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg> MODE CCTV
       </button>
@@ -347,6 +431,9 @@
       </button>
       <button class="control-btn btn-idle" id="btn-stop" onclick="stopSystem()">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> STOP / IDLE
+      </button>
+      <button class="control-btn" onclick="openShutdownConfirm()" style="border-color:var(--red);color:var(--red);margin-top:8px">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7A7 7 0 0 1 5 12c0-2.28 1.09-4.3 2.79-5.61L6.37 4.97A8.968 8.968 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9a9.01 9.01 0 0 0-3.17-6.83z"/></svg> SHUTDOWN SISTEM
       </button>
     </div>
     <hr class="separator">
@@ -450,6 +537,83 @@
     </div>
     <img id="img-modal-src" src="" alt="Face Detail" />
     <button class="btn btn-dim" style="width:100%" onclick="closeImgModal()">TUTUP</button>
+  </div>
+</div>
+
+<!-- UPLOAD REGISTRATION MODAL -->
+<div id="upload-modal" class="upload-modal-overlay" onclick="closeUploadModal()">
+  <div class="upload-modal-content" onclick="event.stopPropagation()">
+    <div class="upload-modal-title">📁 DAFTARKAN WAJAH VIA UPLOAD FILE</div>
+
+    <div class="input-group">
+      <label class="input-label">NAMA USER BARU</label>
+      <input type="text" class="input-field" id="upload-name-input" placeholder="Masukkan nama lengkap..." />
+    </div>
+
+    <div>
+      <div class="input-label" style="margin-bottom:8px">FILE GAMBAR / VIDEO</div>
+      <div class="upload-drop-zone" id="upload-drop-zone"
+           ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <input type="file" id="upload-file-input"
+               accept=".jpg,.jpeg,.png,.bmp,.webp,.tiff,.mp4,.avi,.mov,.mkv,.wmv,.flv,.webm,.m4v"
+               onchange="handleFileSelect(this.files[0])">
+        <div class="upload-drop-icon">⬆</div>
+        <div class="upload-drop-text">
+          <strong>Klik atau seret file ke sini</strong><br>
+          Gambar atau video wajah yang jelas
+        </div>
+        <div class="upload-ext-badges">
+          <span class="upload-ext-badge img">JPG</span>
+          <span class="upload-ext-badge img">PNG</span>
+          <span class="upload-ext-badge img">BMP</span>
+          <span class="upload-ext-badge img">WEBP</span>
+          <span class="upload-ext-badge vid">MP4</span>
+          <span class="upload-ext-badge vid">AVI</span>
+          <span class="upload-ext-badge vid">MOV</span>
+          <span class="upload-ext-badge vid">MKV</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-preview" id="upload-preview">
+      <div id="upload-preview-media"></div>
+      <div class="upload-file-info" id="upload-file-info"></div>
+      <button class="btn btn-dim" style="font-size:9px;padding:4px 12px" onclick="clearUploadFile()">✕ HAPUS FILE</button>
+    </div>
+
+    <div class="upload-progress-bar-wrap" id="upload-progress-wrap">
+      <div class="upload-progress-bar" id="upload-progress-bar"></div>
+    </div>
+
+    <div class="upload-status" id="upload-status"></div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-accent" style="flex:1" onclick="submitUpload()" id="btn-upload-submit">
+        ▶ PROSES & DAFTARKAN
+      </button>
+      <button class="btn btn-dim" onclick="closeUploadModal()">TUTUP</button>
+    </div>
+
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:10px;line-height:1.8">
+      ℹ️ <strong style="color:var(--accent)">Tips:</strong> Upload foto tampak depan yang jelas untuk hasil terbaik.
+      Untuk video, sistem akan otomatis memilih frame terbaik dari berbagai arah.
+    </div>
+  </div>
+</div>
+
+<!-- SHUTDOWN CONFIRM OVERLAY -->
+<div id="shutdown-overlay" class="shutdown-overlay">
+  <div class="shutdown-box">
+    <div class="shutdown-icon">⏻</div>
+    <div class="shutdown-title">SHUTDOWN SISTEM</div>
+    <div class="shutdown-msg">
+      Apakah Anda yakin ingin mematikan seluruh sistem?<br>
+      Proses kamera dan server akan dihentikan.
+    </div>
+    <div class="shutdown-btns">
+      <button class="btn btn-red" style="padding:10px 24px" onclick="confirmShutdown()">YA, SHUTDOWN</button>
+      <button class="btn btn-dim" style="padding:10px 24px" onclick="closeShutdownConfirm()">BATAL</button>
+    </div>
   </div>
 </div>
 
@@ -759,6 +923,282 @@ function switchTab(id, btn) {
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
 }
+
+// =============================================
+// UPLOAD REGISTRATION
+// =============================================
+let selectedUploadFile = null;
+
+const ALLOWED_IMAGE_EXT = ['jpg','jpeg','png','bmp','webp','tiff'];
+const ALLOWED_VIDEO_EXT = ['mp4','avi','mov','mkv','wmv','flv','webm','m4v'];
+const ALLOWED_ALL_EXT = [...ALLOWED_IMAGE_EXT, ...ALLOWED_VIDEO_EXT];
+
+function openUploadModal() {
+  clearUploadState();
+  document.getElementById('upload-modal').classList.add('active');
+  document.getElementById('upload-name-input').focus();
+}
+
+function closeUploadModal() {
+  document.getElementById('upload-modal').classList.remove('active');
+  clearUploadState();
+}
+
+function clearUploadState() {
+  selectedUploadFile = null;
+  document.getElementById('upload-name-input').value = '';
+  document.getElementById('upload-file-input').value = '';
+  document.getElementById('upload-preview').classList.remove('visible');
+  document.getElementById('upload-preview-media').innerHTML = '';
+  document.getElementById('upload-file-info').textContent = '';
+  setUploadStatus('', '');
+  setUploadProgress(false, 0);
+  document.getElementById('btn-upload-submit').disabled = false;
+}
+
+function clearUploadFile() {
+  selectedUploadFile = null;
+  document.getElementById('upload-file-input').value = '';
+  document.getElementById('upload-preview').classList.remove('visible');
+  document.getElementById('upload-preview-media').innerHTML = '';
+  document.getElementById('upload-file-info').textContent = '';
+  setUploadStatus('', '');
+}
+
+function getFileExt(filename) {
+  return filename.includes('.') ? filename.split('.').pop().toLowerCase() : '';
+}
+
+function validateFileExt(filename) {
+  const ext = getFileExt(filename);
+  if (!ALLOWED_ALL_EXT.includes(ext)) {
+    return { valid: false, ext };
+  }
+  return { valid: true, ext, isImage: ALLOWED_IMAGE_EXT.includes(ext), isVideo: ALLOWED_VIDEO_EXT.includes(ext) };
+}
+
+function handleFileSelect(file) {
+  if (!file) return;
+
+  const result = validateFileExt(file.name);
+  if (!result.valid) {
+    setUploadStatus(`❌ Format ".${result.ext || 'tidak dikenal'}" tidak didukung!\nHanya boleh: gambar (jpg, png, bmp, webp) atau video (mp4, avi, mov, mkv, dll).`, 'error');
+    document.getElementById('upload-file-input').value = '';
+    selectedUploadFile = null;
+    return;
+  }
+
+  selectedUploadFile = file;
+  setUploadStatus('', '');
+
+  // Tampilkan preview
+  const preview = document.getElementById('upload-preview');
+  const mediaEl = document.getElementById('upload-preview-media');
+  const infoEl = document.getElementById('upload-file-info');
+  const url = URL.createObjectURL(file);
+
+  mediaEl.innerHTML = '';
+  if (result.isImage) {
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '160px';
+    img.style.objectFit = 'contain';
+    img.style.border = '1px solid var(--border)';
+    mediaEl.appendChild(img);
+  } else {
+    const vid = document.createElement('video');
+    vid.src = url;
+    vid.controls = true;
+    vid.style.maxWidth = '100%';
+    vid.style.maxHeight = '160px';
+    vid.style.border = '1px solid var(--border)';
+    mediaEl.appendChild(vid);
+  }
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+  const typeLabel = result.isImage ? '🖼 GAMBAR' : '🎬 VIDEO';
+  infoEl.textContent = `${typeLabel} | ${file.name} | ${sizeMB} MB`;
+  preview.classList.add('visible');
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-drop-zone').classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+  document.getElementById('upload-drop-zone').classList.remove('dragover');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-drop-zone').classList.remove('dragover');
+  const files = e.dataTransfer.files;
+  if (files && files.length > 0) {
+    handleFileSelect(files[0]);
+  }
+}
+
+function setUploadStatus(msg, type) {
+  const el = document.getElementById('upload-status');
+  el.textContent = msg;
+  el.className = 'upload-status' + (msg ? ' visible ' + type : '');
+}
+
+function setUploadProgress(show, pct) {
+  const wrap = document.getElementById('upload-progress-wrap');
+  const bar = document.getElementById('upload-progress-bar');
+  wrap.className = 'upload-progress-bar-wrap' + (show ? ' visible' : '');
+  bar.style.width = pct + '%';
+}
+
+async function submitUpload() {
+  const name = document.getElementById('upload-name-input').value.trim();
+
+  if (!name) {
+    setUploadStatus('❌ Nama tidak boleh kosong!', 'error');
+    document.getElementById('upload-name-input').focus();
+    return;
+  }
+
+  if (!selectedUploadFile) {
+    setUploadStatus('❌ Pilih file gambar atau video terlebih dahulu!', 'error');
+    return;
+  }
+
+  // Double-check ekstensi di sisi client
+  const result = validateFileExt(selectedUploadFile.name);
+  if (!result.valid) {
+    setUploadStatus(`❌ Format file tidak didukung: .${result.ext || '?'}`, 'error');
+    return;
+  }
+
+  document.getElementById('btn-upload-submit').disabled = true;
+  setUploadStatus('⏳ Mengunggah dan memproses file... Mohon tunggu.', 'loading');
+  setUploadProgress(true, 10);
+
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('file', selectedUploadFile);
+
+  // Animasi progress semu saat upload
+  let prog = 10;
+  const progInterval = setInterval(() => {
+    prog = Math.min(prog + 5, 85);
+    setUploadProgress(true, prog);
+  }, 400);
+
+  try {
+    const res = await fetch(`${API_URL}/register_upload`, {
+      method: 'POST',
+      body: formData
+    });
+    clearInterval(progInterval);
+    setUploadProgress(true, 100);
+
+    const data = await res.json();
+    if (data.ok) {
+      setUploadStatus(`✅ ${data.message}`, 'success');
+      setTimeout(() => {
+        setUploadProgress(false, 0);
+      }, 1000);
+    } else {
+      setUploadStatus(`❌ ${data.error}`, 'error');
+      setUploadProgress(false, 0);
+      document.getElementById('btn-upload-submit').disabled = false;
+    }
+  } catch(e) {
+    clearInterval(progInterval);
+    setUploadProgress(false, 0);
+    setUploadStatus('❌ Gagal terhubung ke server. Pastikan sistem berjalan.', 'error');
+    document.getElementById('btn-upload-submit').disabled = false;
+  }
+}
+
+// Allow Enter key on name input to proceed
+document.addEventListener('DOMContentLoaded', () => {
+  const nameInput = document.getElementById('upload-name-input');
+  if (nameInput) {
+    nameInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitUpload();
+    });
+  }
+});
+
+// =============================================
+// SHUTDOWN
+// =============================================
+function openShutdownConfirm() {
+  document.getElementById('shutdown-overlay').classList.add('active');
+}
+
+function closeShutdownConfirm() {
+  document.getElementById('shutdown-overlay').classList.remove('active');
+}
+
+async function confirmShutdown() {
+  document.getElementById('shutdown-overlay').classList.remove('active');
+  try {
+    await fetch(`${API_URL}/shutdown`, { method: 'POST' });
+  } catch(e) {}
+  // Tampilkan pesan shutdown di UI
+  document.body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;
+                background:#050a0f;font-family:'Orbitron',monospace;flex-direction:column;gap:24px">
+      <div style="font-size:64px;animation:spin 2s linear infinite">⏻</div>
+      <div style="font-size:20px;color:#ff2d55;letter-spacing:4px;font-weight:900">SISTEM DIMATIKAN</div>
+      <div style="font-size:12px;color:#4a7a9b;letter-spacing:2px">Server telah dihentikan. Tutup halaman ini.</div>
+      <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+    </div>`;
+}
+
+// =============================================
+// PTZ CONTROL (BACKEND ONLY)
+// =============================================
+let ptzSpeed = 1;
+
+function sendPTZCommand(action) {
+  try {
+    fetch(`${API_URL}/ptz`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action, speed: ptzSpeed })
+    });
+  } catch(e) { console.warn('PTZ error:', e); }
+}
+
+function resetPTZ() {
+  try {
+    fetch(`${API_URL}/ptz`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action: 'reset' })
+    });
+  } catch(e) {}
+}
+
+// Keyboard PTZ shortcuts (arrow keys + +/- ketika kamera aktif)
+document.addEventListener('keydown', (e) => {
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  const map = {
+    'ArrowLeft':  'left',
+    'ArrowRight': 'right',
+    'ArrowUp':    'up',
+    'ArrowDown':  'down',
+    '+':          'zoom_in',
+    '=':          'zoom_in',
+    '-':          'zoom_out',
+    '_':          'zoom_out',
+    'h':          'reset',
+    'H':          'reset',
+  };
+  if (map[e.key]) {
+    e.preventDefault();
+    if (e.key === 'h' || e.key === 'H') { resetPTZ(); return; }
+    sendPTZCommand(map[e.key]);
+  }
+});
 </script>
 </body>
 </html>
