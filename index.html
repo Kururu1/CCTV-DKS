@@ -1,825 +1,1895 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FACE RECOGNITION SYSTEM</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FACE RECOGNITION SYSTEM</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
 
-  :root {
-    --bg: #050a0f;
-    --panel: #080e17;
-    --border: #0d2135;
-    --accent: #00e5ff;
-    --accent2: #ff6b35;
-    --green: #00ff88;
-    --red: #ff2d55;
-    --orange: #ffaa00;
-    --yellow: #ffe600;
-    --text: #c8e6f5;
-    --text-dim: #4a7a9b;
-    --grid: rgba(0,229,255,0.04);
-    --glow: 0 0 20px rgba(0,229,255,0.3);
-    --glow-red: 0 0 20px rgba(255,45,85,0.4);
-    --glow-green: 0 0 20px rgba(0,255,136,0.4);
-  }
+    :root {
+      --bg: #050a0f;
+      --panel: #080e17;
+      --border: #0d2135;
+      --accent: #00e5ff;
+      --accent2: #ff6b35;
+      --green: #00ff88;
+      --red: #ff2d55;
+      --orange: #ffaa00;
+      --yellow: #ffe600;
+      --text: #c8e6f5;
+      --text-dim: #4a7a9b;
+      --grid: rgba(0, 229, 255, 0.04);
+      --glow: 0 0 20px rgba(0, 229, 255, 0.3);
+      --glow-red: 0 0 20px rgba(255, 45, 85, 0.4);
+      --glow-green: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-    background-image:
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
 
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
-    pointer-events: none; z-index: 1000;
-  }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.08) 2px, rgba(0, 0, 0, 0.08) 4px);
+      pointer-events: none;
+      z-index: 1000;
+    }
 
-  /* HEADER */
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 24px; border-bottom: 1px solid var(--border);
-    background: rgba(8,14,23,0.95); position: sticky; top: 0; z-index: 100;
-    backdrop-filter: blur(10px);
-  }
-  .header-logo { display: flex; align-items: center; gap: 12px; }
-  .logo-icon {
-    width: 36px; height: 36px; border: 2px solid var(--accent); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: var(--glow); animation: pulse-logo 2s infinite;
-  }
-  @keyframes pulse-logo { 0%,100% { box-shadow: 0 0 10px rgba(0,229,255,0.3); } 50% { box-shadow: 0 0 30px rgba(0,229,255,0.8); } }
-  .logo-icon svg { width: 20px; height: 20px; fill: var(--accent); }
-  .logo-title { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 900; color: var(--accent); letter-spacing: 3px; text-shadow: var(--glow); }
-  .logo-sub { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; }
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 14, 23, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
 
-  .header-status { display: flex; align-items: center; gap: 20px; }
-  .status-badge {
-    display: flex; align-items: center; gap: 8px; padding: 6px 16px;
-    border: 1px solid; font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700;
-    letter-spacing: 2px; transition: all 0.3s;
-  }
-  .status-badge.idle { border-color: var(--text-dim); color: var(--text-dim); }
-  .status-badge.scan, .status-badge.wait-confirm { border-color: var(--yellow); color: var(--yellow); box-shadow: 0 0 15px rgba(255,230,0,0.3); }
-  .status-badge.run { border-color: var(--green); color: var(--green); box-shadow: var(--glow-green); }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-  .dot.blink { animation: blink 1s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-  .clock { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--text-dim); }
+    .logo-icon {
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-  /* MAIN LAYOUT (DESKTOP) */
-  .main { display: grid; grid-template-columns: 280px 1fr 300px; gap: 1px; height: calc(100vh - 61px); background: var(--border); }
+    @keyframes pulse-logo-img {
 
-  /* PANELS */
-  .panel { background: var(--panel); padding: 16px; overflow-y: auto; }
-  .panel::-webkit-scrollbar { width: 4px; } .panel::-webkit-scrollbar-thumb { background: var(--border); }
-  .panel-title {
-    font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700; letter-spacing: 3px;
-    color: var(--text-dim); margin-bottom: 16px; padding-bottom: 8px;
-    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
-  }
-  .panel-title::before { content: ''; width: 3px; height: 12px; background: var(--accent); box-shadow: var(--glow); }
+      0%,
+      100% {
+        filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.3));
+      }
 
-  /* CENTER - CAMERA */
-  .camera-area { background: #000; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-  .cam-feed { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  #live-view { width: 100%; height: 100%; object-fit: contain; display: none; }
-  .cam-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--text-dim); position: absolute; inset: 0; }
-  .cam-placeholder svg { width: 64px; height: 64px; opacity: 0.3; }
-  .cam-placeholder p { font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+      50% {
+        filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.8));
+      }
+    }
 
-  /* SCAN OVERLAY */
-  .scan-overlay { position: absolute; inset: 0; pointer-events: none; display: none; }
-  .scan-overlay.active { display: block; }
-  .corner { position: absolute; width: 30px; height: 30px; }
-  .corner.tl { top: 20px; left: 20px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); }
-  .corner.tr { top: 20px; right: 20px; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); }
-  .corner.bl { bottom: 20px; left: 20px; border-bottom: 2px solid var(--accent); border-left: 2px solid var(--accent); }
-  .corner.br { bottom: 20px; right: 20px; border-bottom: 2px solid var(--accent); border-right: 2px solid var(--accent); }
-  .scan-line {
-    position: absolute; left: 0; right: 0; height: 2px; top: 0;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent); box-shadow: 0 0 10px var(--accent);
-    animation: scan-move 2s linear infinite;
-  }
-  @keyframes scan-move { 0% { top: 10%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--accent);
+    }
 
-  /* CAM CONTROLS */
-  .cam-controls { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #030609; border-top: 1px solid var(--border); flex-wrap: wrap; }
-  .cam-id-badge { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin-right: auto; }
+    .logo-icon img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      animation: pulse-logo-img 2s infinite;
+    }
 
-  /* BUTTONS */
-  .btn {
-    padding: 8px 18px; border: 1px solid; background: transparent; cursor: pointer;
-    font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700;
-    letter-spacing: 2px; transition: all 0.2s; position: relative; overflow: hidden; text-transform: uppercase;
-  }
-  .btn::after { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity 0.2s; }
-  .btn:hover::after { opacity: 0.1; } .btn:active { transform: scale(0.97); }
-  .btn-accent { border-color: var(--accent); color: var(--accent); } .btn-accent:hover { box-shadow: var(--glow); }
-  .btn-green { border-color: var(--green); color: var(--green); } .btn-green:hover { box-shadow: var(--glow-green); }
-  .btn-red { border-color: var(--red); color: var(--red); } .btn-red:hover { box-shadow: var(--glow-red); }
-  .btn-orange { border-color: var(--orange); color: var(--orange); }
-  .btn-yellow { border-color: var(--yellow); color: var(--yellow); }
-  .btn-dim { border-color: var(--text-dim); color: var(--text-dim); }
-  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .logo-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-shadow: var(--glow);
+    }
 
-  /* LEFT PANEL - CONTROLS */
-  .control-section { margin-bottom: 20px; }
-  .section-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 10px; }
-  .control-btn {
-    width: 100%; padding: 12px 16px; margin-bottom: 6px; border: 1px solid var(--border); background: transparent;
-    color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600;
-    letter-spacing: 1px; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden;
-  }
-  .control-btn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--text-dim); transition: background 0.2s; }
-  .control-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.05); }
-  .control-btn:hover::before { background: var(--accent); }
-  .control-btn.active-mode { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.05); }
-  .control-btn.active-mode::before { background: var(--green); }
-  .control-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .logo-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      color: var(--text-dim);
+      letter-spacing: 0px;
+    }
 
-  /* SCAN FORM */
-  .scan-form { display: none; } .scan-form.visible { display: block; }
-  .input-group { margin-bottom: 12px; }
-  .input-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 6px; }
-  .input-field {
-    width: 100%; background: #030609; border: 1px solid var(--border); color: var(--text);
-    padding: 10px 12px; font-family: 'Share Tech Mono', monospace; font-size: 13px; outline: none; transition: border-color 0.2s;
-  }
-  .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
 
-  /* DIRECTION INDICATORS */
-  .direction-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; width: 160px; height: 160px; margin: 16px auto; }
-  .dir-cell {
-    display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);
-    font-family: 'Orbitron', monospace; font-size: 8px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); transition: all 0.3s;
-  }
-  .dir-cell.empty { border: none; background: transparent; }
-  .dir-cell.waiting { border-color: var(--border); color: var(--text-dim); }
-  .dir-cell.active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,230,0,0.1); animation: pulse-cell 0.5s infinite; }
-  .dir-cell.done { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.1); }
-  @keyframes pulse-cell { 0%,100%{opacity:1} 50%{opacity:0.5} }
-  .scan-progress { margin-top: 8px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); text-align: center; }
-  .progress-bar-wrap { height: 4px; background: var(--border); margin-top: 8px; position: relative; overflow: hidden; }
-  .progress-bar-fill { height: 100%; width: 0%; background: var(--green); box-shadow: var(--glow-green); transition: width 0.4s; }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border: 1px solid;
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+    }
 
-  /* CAMERA SWITCH */
-  .cam-switch { display: flex; gap: 4px; }
-  .cam-opt {
-    flex: 1; padding: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace; font-size: 11px; cursor: pointer; transition: all 0.2s; text-align: center;
-  }
-  .cam-opt.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.08); }
+    .status-badge.idle {
+      border-color: var(--text-dim);
+      color: var(--text-dim);
+    }
 
-  /* RIGHT PANEL - DATABASE + LOG */
-  .tab-bar { display: flex; margin-bottom: 16px; gap: 1px; border-bottom: 1px solid var(--border); }
-  .tab {
-    flex: 1; padding: 8px 4px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-dim);
-    font-family: 'Orbitron', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; transition: all 0.2s;
-  }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab-content { display: none; } .tab-content.active { display: block; }
+    .status-badge.scan,
+    .status-badge.wait-confirm {
+      border-color: var(--yellow);
+      color: var(--yellow);
+      box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);
+    }
 
-  /* PERSON CARDS */
-  .person-card {
-    display: flex; align-items: center; gap: 10px; padding: 10px; margin-bottom: 6px;
-    border: 1px solid var(--border); background: rgba(0,0,0,0.3); transition: all 0.2s;
-  }
-  .person-card:hover { border-color: var(--accent); background: rgba(0,229,255,0.04); }
-  .person-card.present { border-color: var(--green); background: rgba(0,255,136,0.05); }
-  .person-card.intruder { border-color: var(--orange); background: rgba(255,165,0,0.05); }
-  .person-avatar { width: 40px; height: 40px; border: 1px solid var(--border); background: #030609; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
-  .person-avatar img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
-  .person-avatar img:hover { transform: scale(1.1); }
-  .person-avatar svg { width: 20px; height: 20px; fill: var(--text-dim); }
-  .person-info { flex: 1; min-width: 0; }
-  .person-name { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .person-meta { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-  .person-status { font-family: 'Orbitron', monospace; font-size: 8px; font-weight: 700; padding: 3px 8px; letter-spacing: 1px; border: 1px solid; flex-shrink: 0; }
-  .status-in { border-color: var(--green); color: var(--green); }
-  .status-out { border-color: var(--text-dim); color: var(--text-dim); }
-  .status-intruder { border-color: var(--orange); color: var(--orange); }
+    .status-badge.run {
+      border-color: var(--green);
+      color: var(--green);
+      box-shadow: var(--glow-green);
+    }
 
-  /* LOG ENTRIES */
-  .log-entry {
-    display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; margin-bottom: 3px;
-    border-left: 2px solid var(--border); font-family: 'Share Tech Mono', monospace; font-size: 11px; line-height: 1.5;
-  }
-  .log-entry.masuk { border-left-color: var(--green); } .log-entry.keluar { border-left-color: var(--text-dim); }
-  .log-entry.unknown { border-left-color: var(--red); } .log-entry.system { border-left-color: var(--accent); }
-  .log-entry.scan { border-left-color: var(--yellow); }
-  .log-time { color: var(--text-dim); flex-shrink: 0; width: 65px; } .log-name { color: var(--text); font-weight: bold; }
-  .log-action { color: var(--text-dim); font-size: 10px; margin-top: 2px; }
-  .log-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; margin-top: 4px; }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
 
-  /* STATS BAR */
-  .stats-bar { display: flex; flex-wrap: wrap; gap: 1px; background: var(--border); border-top: 1px solid var(--border); }
-  .stat-block { flex: 1; background: var(--panel); padding: 8px 12px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .stat-val { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 900; color: var(--accent); text-shadow: var(--glow); }
-  .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+    .dot.blink {
+      animation: blink 1s infinite;
+    }
 
-  /* ACTIVE SESSIONS & EMPTY STATES */
-  .session-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 4px; border: 1px solid rgba(0,255,136,0.2); background: rgba(0,255,136,0.03); font-family: 'Share Tech Mono', monospace; font-size: 11px; }
-  .session-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1s infinite; }
-  .session-name { color: var(--green); flex: 1; } .session-type { color: var(--text-dim); font-size: 9px; }
-  .empty-state { text-align: center; padding: 30px; color: var(--text-dim); font-family: 'Share Tech Mono', monospace; font-size: 11px; line-height: 2; }
-  .empty-state svg { width: 40px; height: 40px; opacity: 0.2; margin-bottom: 12px; }
+    @keyframes blink {
 
-  .separator { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+      0%,
+      100% {
+        opacity: 1
+      }
 
-  /* ALERT BANNER */
-  .alert-banner { display: none; padding: 8px 14px; font-family: 'Orbitron', monospace; font-size: 10px; letter-spacing: 2px; font-weight: 700; text-align: center; animation: blink-bg 0.8s infinite; }
-  .alert-banner.active { display: block; }
-  .alert-banner.alert-intruder { background: rgba(255,45,85,0.15); color: var(--red); border-bottom: 1px solid var(--red); }
-  @keyframes blink-bg { 0%,100%{opacity:1} 50%{opacity:0.6} }
+      50% {
+        opacity: 0
+      }
+    }
 
-  /* IMAGE POPUP MODAL CSS (DIPERBESAR) */
-  .img-modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-    z-index: 2000; display: none; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.3s ease;
-  }
-  .img-modal-overlay.active { display: flex; opacity: 1; }
-  
-  .img-modal-content {
-    background: var(--panel); padding: 20px; border: 1px solid var(--accent); 
-    box-shadow: 0 0 40px rgba(0, 229, 255, 0.4);
-    display: flex; flex-direction: column; align-items: center; gap: 16px;
-    transform: scale(0.9); transition: transform 0.3s ease;
-    width: 450px; /* Lebar modal diperbesar */
-    max-width: 90vw;
-  }
-  .img-modal-overlay.active .img-modal-content { transform: scale(1); }
-  
-  .img-modal-content img {
-    width: 100%; 
-    height: 350px; /* Tinggi gambar diperbesar */
-    border: 1px solid var(--border); 
-    object-fit: contain; 
-    background: #030609; 
-    image-rendering: -webkit-optimize-contrast; 
-  }
+    .clock {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
 
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); }
+    /* MAIN LAYOUT (DESKTOP) */
+    .main {
+      display: grid;
+      grid-template-columns: 280px 1fr 300px;
+      gap: 1px;
+      height: calc(100vh - 61px);
+      background: var(--border);
+    }
 
-  /* UPLOAD MODAL */
-  .upload-modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px);
-    z-index: 3000; display: none; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.3s ease;
-  }
-  .upload-modal-overlay.active { display: flex; opacity: 1; }
-  .upload-modal-content {
-    background: var(--panel); padding: 24px; border: 1px solid var(--accent);
-    box-shadow: 0 0 50px rgba(0,229,255,0.3); display: flex; flex-direction: column; gap: 16px;
-    width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
-    transform: scale(0.92); transition: transform 0.3s ease;
-  }
-  .upload-modal-overlay.active .upload-modal-content { transform: scale(1); }
-  .upload-modal-title {
-    font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700; color: var(--accent);
-    letter-spacing: 3px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
-  }
-  .upload-drop-zone {
-    border: 2px dashed var(--border); background: #030609; padding: 32px 20px;
-    text-align: center; cursor: pointer; transition: all 0.2s; position: relative;
-  }
-  .upload-drop-zone:hover, .upload-drop-zone.dragover {
-    border-color: var(--accent); background: rgba(0,229,255,0.05);
-    box-shadow: var(--glow);
-  }
-  .upload-drop-zone input[type="file"] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
-  .upload-drop-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.6; }
-  .upload-drop-text { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); line-height: 1.8; }
-  .upload-drop-text strong { color: var(--accent); }
-  .upload-ext-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
-  .upload-ext-badge {
-    font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 3px 8px;
-    border: 1px solid var(--border); color: var(--text-dim); letter-spacing: 1px;
-  }
-  .upload-ext-badge.img { border-color: var(--accent); color: var(--accent); }
-  .upload-ext-badge.vid { border-color: var(--orange); color: var(--orange); }
-  .upload-preview {
-    display: none; flex-direction: column; align-items: center; gap: 10px;
-    padding: 16px; border: 1px solid var(--border); background: #030609;
-  }
-  .upload-preview.visible { display: flex; }
-  .upload-preview img, .upload-preview video {
-    max-width: 100%; max-height: 180px; object-fit: contain; border: 1px solid var(--border);
-  }
-  .upload-file-info {
-    font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); text-align: center;
-  }
-  .upload-status {
-    font-family: 'Share Tech Mono', monospace; font-size: 12px; text-align: center;
-    padding: 10px; border: 1px solid var(--border); display: none;
-  }
-  .upload-status.visible { display: block; }
-  .upload-status.success { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.07); }
-  .upload-status.error { border-color: var(--red); color: var(--red); background: rgba(255,45,85,0.07); }
-  .upload-status.loading { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.05); }
-  .upload-progress-bar-wrap { height: 3px; background: var(--border); overflow: hidden; width: 100%; display: none; }
-  .upload-progress-bar-wrap.visible { display: block; }
-  .upload-progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; box-shadow: var(--glow); }
+    /* PANELS */
+    .panel {
+      background: var(--panel);
+      padding: 16px;
+      overflow-y: auto;
+    }
 
-  /* SHUTDOWN CONFIRM */
-  .shutdown-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
-    z-index: 4000; display: none; align-items: center; justify-content: center;
-  }
-  .shutdown-overlay.active { display: flex; }
-  .shutdown-box {
-    background: var(--panel); border: 2px solid var(--red); padding: 32px;
-    text-align: center; box-shadow: var(--glow-red); max-width: 380px; width: 90%;
-  }
-  .shutdown-icon { font-size: 48px; margin-bottom: 16px; animation: pulse-red 1s infinite; }
-  @keyframes pulse-red { 0%,100%{opacity:1} 50%{opacity:0.5} }
-  .shutdown-title {
-    font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 900;
-    color: var(--red); letter-spacing: 3px; margin-bottom: 12px; text-shadow: var(--glow-red);
-  }
-  .shutdown-msg { font-family: 'Rajdhani', sans-serif; font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
-  .shutdown-btns { display: flex; gap: 10px; justify-content: center; }
+    .panel::-webkit-scrollbar {
+      width: 4px;
+    }
 
-  /* RESPONSIVE DESIGN */
-  @media (max-width: 1024px) {
-    .header { flex-direction: column; gap: 12px; text-align: center; }
-    .main { display: flex; flex-direction: column; height: auto; }
-    .camera-area { order: -1; height: 45vh; min-height: 350px; }
-    .panel { height: 400px; overflow-y: auto; }
-    .stat-block { min-width: 45%; }
-  }
-  @media (max-width: 480px) {
-    .stat-block { min-width: 100%; }
-  }
-</style>
+    .panel::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    .panel-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title::before {
+      content: '';
+      width: 3px;
+      height: 12px;
+      background: var(--accent);
+      box-shadow: var(--glow);
+    }
+
+    /* CENTER - CAMERA */
+    .camera-area {
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cam-feed {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #live-view {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .cam-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--text-dim);
+      position: absolute;
+      inset: 0;
+    }
+
+    .cam-placeholder svg {
+      width: 64px;
+      height: 64px;
+      opacity: 0.3;
+    }
+
+    .cam-placeholder p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+    }
+
+    /* SCAN OVERLAY */
+    .scan-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+    }
+
+    .scan-overlay.active {
+      display: block;
+    }
+
+    .corner {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+    }
+
+    .corner.tl {
+      top: 20px;
+      left: 20px;
+      border-top: 2px solid var(--accent);
+      border-left: 2px solid var(--accent);
+    }
+
+    .corner.tr {
+      top: 20px;
+      right: 20px;
+      border-top: 2px solid var(--accent);
+      border-right: 2px solid var(--accent);
+    }
+
+    .corner.bl {
+      bottom: 20px;
+      left: 20px;
+      border-bottom: 2px solid var(--accent);
+      border-left: 2px solid var(--accent);
+    }
+
+    .corner.br {
+      bottom: 20px;
+      right: 20px;
+      border-bottom: 2px solid var(--accent);
+      border-right: 2px solid var(--accent);
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      top: 0;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: scan-move 2s linear infinite;
+    }
+
+    @keyframes scan-move {
+      0% {
+        top: 10%;
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        top: 90%;
+        opacity: 0;
+      }
+    }
+
+    /* CAM CONTROLS */
+    .cam-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #030609;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .cam-id-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-right: auto;
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: 8px 18px;
+      border: 1px solid;
+      background: transparent;
+      cursor: pointer;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+      text-transform: uppercase;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover::after {
+      opacity: 0.1;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-accent {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-accent:hover {
+      box-shadow: var(--glow);
+    }
+
+    .btn-green {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .btn-green:hover {
+      box-shadow: var(--glow-green);
+    }
+
+    .btn-red {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .btn-red:hover {
+      box-shadow: var(--glow-red);
+    }
+
+    .btn-orange {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .btn-yellow {
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+
+    .btn-dim {
+      border-color: var(--text-dim);
+      color: var(--text-dim);
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* LEFT PANEL - CONTROLS */
+    .control-section {
+      margin-bottom: 20px;
+    }
+
+    .section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .control-btn {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .control-btn::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--text-dim);
+      transition: background 0.2s;
+    }
+
+    .control-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.05);
+    }
+
+    .control-btn:hover::before {
+      background: var(--accent);
+    }
+
+    .control-btn.active-mode {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .control-btn.active-mode::before {
+      background: var(--green);
+    }
+
+    .control-btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* SCAN FORM */
+    .scan-form {
+      display: none;
+    }
+
+    .scan-form.visible {
+      display: block;
+    }
+
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    .input-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: #030609;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    /* DIRECTION INDICATORS */
+    .direction-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 4px;
+      width: 160px;
+      height: 160px;
+      margin: 16px auto;
+    }
+
+    .dir-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      font-family: 'Orbitron', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      transition: all 0.3s;
+    }
+
+    .dir-cell.empty {
+      border: none;
+      background: transparent;
+    }
+
+    .dir-cell.waiting {
+      border-color: var(--border);
+      color: var(--text-dim);
+    }
+
+    .dir-cell.active {
+      border-color: var(--yellow);
+      color: var(--yellow);
+      background: rgba(255, 230, 0, 0.1);
+      animation: pulse-cell 0.5s infinite;
+    }
+
+    .dir-cell.done {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    @keyframes pulse-cell {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.5
+      }
+    }
+
+    .scan-progress {
+      margin-top: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .progress-bar-wrap {
+      height: 4px;
+      background: var(--border);
+      margin-top: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--green);
+      box-shadow: var(--glow-green);
+      transition: width 0.4s;
+    }
+
+    /* CAMERA SWITCH */
+    .cam-switch {
+      display: flex;
+      gap: 4px;
+    }
+
+    .cam-opt {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .cam-opt.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.08);
+    }
+
+    /* RIGHT PANEL - DATABASE + LOG */
+    .tab-bar {
+      display: flex;
+      margin-bottom: 16px;
+      gap: 1px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 4px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-dim);
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* PERSON CARDS */
+    .person-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      margin-bottom: 6px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+      transition: all 0.2s;
+    }
+
+    .person-card:hover {
+      border-color: var(--accent);
+      background: rgba(0, 229, 255, 0.04);
+    }
+
+    .person-card.present {
+      border-color: var(--green);
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .person-card.intruder {
+      border-color: var(--orange);
+      background: rgba(255, 165, 0, 0.05);
+    }
+
+    .person-avatar {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      background: #030609;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .person-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s;
+    }
+
+    .person-avatar img:hover {
+      transform: scale(1.1);
+    }
+
+    .person-avatar svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-dim);
+    }
+
+    .person-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .person-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .person-meta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .person-status {
+      font-family: 'Orbitron', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      padding: 3px 8px;
+      letter-spacing: 1px;
+      border: 1px solid;
+      flex-shrink: 0;
+    }
+
+    .status-in {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .status-out {
+      border-color: var(--text-dim);
+      color: var(--text-dim);
+    }
+
+    .status-intruder {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    /* LOG ENTRIES */
+    .log-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      margin-bottom: 3px;
+      border-left: 2px solid var(--border);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .log-entry.masuk {
+      border-left-color: var(--green);
+    }
+
+    .log-entry.keluar {
+      border-left-color: var(--text-dim);
+    }
+
+    .log-entry.unknown {
+      border-left-color: var(--red);
+    }
+
+    .log-entry.system {
+      border-left-color: var(--accent);
+    }
+
+    .log-entry.scan {
+      border-left-color: var(--yellow);
+    }
+
+    .log-time {
+      color: var(--text-dim);
+      flex-shrink: 0;
+      width: 65px;
+    }
+
+    .log-name {
+      color: var(--text);
+      font-weight: bold;
+    }
+
+    .log-action {
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
+    .log-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-block {
+      flex: 1;
+      background: var(--panel);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .stat-val {
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: var(--glow);
+    }
+
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    /* ACTIVE SESSIONS & EMPTY STATES */
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      margin-bottom: 4px;
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      background: rgba(0, 255, 136, 0.03);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+    }
+
+    .session-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 1s infinite;
+    }
+
+    .session-name {
+      color: var(--green);
+      flex: 1;
+    }
+
+    .session-type {
+      color: var(--text-dim);
+      font-size: 9px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      line-height: 2;
+    }
+
+    .empty-state svg {
+      width: 40px;
+      height: 40px;
+      opacity: 0.2;
+      margin-bottom: 12px;
+    }
+
+    .separator {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    /* ALERT BANNER */
+    .alert-banner {
+      display: none;
+      padding: 8px 14px;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      text-align: center;
+      animation: blink-bg 0.8s infinite;
+    }
+
+    .alert-banner.active {
+      display: block;
+    }
+
+    .alert-banner.alert-intruder {
+      background: rgba(255, 45, 85, 0.15);
+      color: var(--red);
+      border-bottom: 1px solid var(--red);
+    }
+
+    @keyframes blink-bg {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.6
+      }
+    }
+
+    /* IMAGE POPUP MODAL CSS (DIPERBESAR) */
+    .img-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .img-modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .img-modal-content {
+      background: var(--panel);
+      padding: 20px;
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      width: 450px;
+      /* Lebar modal diperbesar */
+      max-width: 90vw;
+    }
+
+    .img-modal-overlay.active .img-modal-content {
+      transform: scale(1);
+    }
+
+    .img-modal-content img {
+      width: 100%;
+      height: 350px;
+      /* Tinggi gambar diperbesar */
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: #030609;
+      image-rendering: -webkit-optimize-contrast;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    /* UPLOAD MODAL */
+    .upload-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 3000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .upload-modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .upload-modal-content {
+      background: var(--panel);
+      padding: 24px;
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 50px rgba(0, 229, 255, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 480px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.92);
+      transition: transform 0.3s ease;
+    }
+
+    .upload-modal-overlay.active .upload-modal-content {
+      transform: scale(1);
+    }
+
+    .upload-modal-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 3px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .upload-drop-zone {
+      border: 2px dashed var(--border);
+      background: #030609;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-drop-zone:hover,
+    .upload-drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(0, 229, 255, 0.05);
+      box-shadow: var(--glow);
+    }
+
+    .upload-drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-drop-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+
+    .upload-drop-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+
+    .upload-drop-text strong {
+      color: var(--accent);
+    }
+
+    .upload-ext-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .upload-ext-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    .upload-ext-badge.img {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .upload-ext-badge.vid {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .upload-preview {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      background: #030609;
+    }
+
+    .upload-preview.visible {
+      display: flex;
+    }
+
+    .upload-preview img,
+    .upload-preview video {
+      max-width: 100%;
+      max-height: 180px;
+      object-fit: contain;
+      border: 1px solid var(--border);
+    }
+
+    .upload-file-info {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .upload-status {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      text-align: center;
+      padding: 10px;
+      border: 1px solid var(--border);
+      display: none;
+    }
+
+    .upload-status.visible {
+      display: block;
+    }
+
+    .upload-status.success {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(0, 255, 136, 0.07);
+    }
+
+    .upload-status.error {
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(255, 45, 85, 0.07);
+    }
+
+    .upload-status.loading {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.05);
+    }
+
+    .upload-progress-bar-wrap {
+      height: 3px;
+      background: var(--border);
+      overflow: hidden;
+      width: 100%;
+      display: none;
+    }
+
+    .upload-progress-bar-wrap.visible {
+      display: block;
+    }
+
+    .upload-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.3s;
+      box-shadow: var(--glow);
+    }
+
+    /* SHUTDOWN CONFIRM */
+    .shutdown-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 4000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shutdown-overlay.active {
+      display: flex;
+    }
+
+    .shutdown-box {
+      background: var(--panel);
+      border: 2px solid var(--red);
+      padding: 32px;
+      text-align: center;
+      box-shadow: var(--glow-red);
+      max-width: 380px;
+      width: 90%;
+    }
+
+    .shutdown-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      animation: pulse-red 1s infinite;
+    }
+
+    @keyframes pulse-red {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.5
+      }
+    }
+
+    .shutdown-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+      text-shadow: var(--glow-red);
+    }
+
+    .shutdown-msg {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .shutdown-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 1024px) {
+      .header {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .main {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+      }
+
+      .camera-area {
+        order: -1;
+        height: 45vh;
+        min-height: 350px;
+      }
+
+      .panel {
+        height: 400px;
+        overflow-y: auto;
+      }
+
+      .stat-block {
+        min-width: 45%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stat-block {
+        min-width: 100%;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="alert-banner alert-intruder" id="alert-banner">
-  ⚠ PENYUSUP TERDETEKSI — AKSI DIPERLUKAN ⚠
-</div>
-
-<header class="header">
-  <div class="header-logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-    </div>
-    <div>
-      <div class="logo-title">FACE RECOGNITION SYSTEM</div>
-      <div class="logo-sub">INSIGHTFACE · BUFFALO_L · v2.1</div>
-    </div>
+  <div class="alert-banner alert-intruder" id="alert-banner">
+    ⚠ PENYUSUP TERDETEKSI — AKSI DIPERLUKAN ⚠
   </div>
-  <div class="header-status">
-    <div id="header-mode-badge" class="status-badge idle">
-      <div class="dot" id="status-dot"></div>
-      <span id="status-text">IDLE</span>
-    </div>
-    <div class="clock" id="clock">--:--:--</div>
-  </div>
-</header>
 
-<div class="stats-bar">
-  <div class="stat-block"><div class="stat-val" id="stat-known">0</div><div class="stat-label">TERDAFTAR</div></div>
-  <div class="stat-block"><div class="stat-val" style="color:var(--orange)" id="stat-unknown">0</div><div class="stat-label">UNKNOWN</div></div>
-  <div class="stat-block"><div class="stat-val" style="color:var(--green)" id="stat-present">0</div><div class="stat-label">HADIR</div></div>
-  <div class="stat-block"><div class="stat-val" style="color:var(--red)" id="stat-intruder">0</div><div class="stat-label">PENYUSUP</div></div>
-</div>
-
-<div class="main">
-  <!-- LEFT PANEL -->
-  <div class="panel">
-    <div class="panel-title">KONTROL SISTEM</div>
-    
-    <div class="control-section">
-      <div class="section-label">KAMERA</div>
-      <div class="cam-switch">
-        <button class="cam-opt active" id="cam-0" onclick="switchCam(0)">CAM PC</button>
-        <button class="cam-opt" id="cam-1" onclick="switchCam(1)">CCTV</button>
+  <header class="header">
+    <div class="header-logo">
+      <div class="logo-icon">
+        <img src="img/Layer 1.png" alt="">
+      </div>
+      <div>
+        <div class="logo-title">MUKIDI DKS-2</div>
+        <div class="logo-sub">(MONITORING USER KAMERA IDENTIFICATION DETECTOR INTRUDER)</div>
       </div>
     </div>
-    <hr class="separator">
-
-    <div class="control-section">
-      <div class="section-label">MODE OPERASI</div>
-      <button class="control-btn" id="btn-scan" onclick="startScanFlow()">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg> DAFTARKAN WAJAH
-      </button>
-      <button class="control-btn" onclick="openUploadModal()">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-2 7v-3H9l3-3 3 3h-2v3h-2z"/></svg> DAFTAR VIA UPLOAD
-      </button>
-      <button class="control-btn" id="btn-run" onclick="startCCTV()">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg> MODE CCTV
-      </button>
-      <button class="control-btn" id="btn-reload" onclick="reloadDB()">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> RELOAD DATABASE
-      </button>
-      <button class="control-btn btn-idle" id="btn-stop" onclick="stopSystem()">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg> STOP / IDLE
-      </button>
-      <button class="control-btn" onclick="openShutdownConfirm()" style="border-color:var(--red);color:var(--red);margin-top:8px">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7A7 7 0 0 1 5 12c0-2.28 1.09-4.3 2.79-5.61L6.37 4.97A8.968 8.968 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9a9.01 9.01 0 0 0-3.17-6.83z"/></svg> SHUTDOWN SISTEM
-      </button>
+    <div class="header-status">
+      <div id="header-mode-badge" class="status-badge idle">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-text">IDLE</span>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
     </div>
-    <hr class="separator">
+  </header>
 
-    <!-- SCAN FORM -->
-    <div id="scan-form" class="scan-form">
-      <div class="section-label">REGISTRASI WAJAH BARU</div>
-      <div id="scan-step-input">
-        <div class="input-group">
-          <label class="input-label">NAMA USER BARU</label>
-          <input type="text" class="input-field" id="scan-name-input" placeholder="Masukkan nama..." />
-        </div>
-        <button class="btn btn-yellow" style="width:100%;margin-bottom:6px" onclick="confirmScanName()">KONFIRMASI NAMA →</button>
-        <button class="btn btn-dim" style="width:100%" onclick="cancelScan()">BATAL SCAN</button>
-      </div>
-
-      <div id="scan-step-scan" style="display:none">
-        <div style="text-align:center;margin-bottom:8px">
-          <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent)">SCANNING: <span id="scan-name-display" style="color:var(--yellow)"></span></span>
-        </div>
-        <div class="direction-grid">
-          <div class="dir-cell empty"></div><div class="dir-cell waiting" id="dir-UP">UP</div><div class="dir-cell empty"></div>
-          <div class="dir-cell waiting" id="dir-LEFT">LEFT</div><div class="dir-cell waiting" id="dir-CENTER">CTR</div><div class="dir-cell waiting" id="dir-RIGHT">RIGHT</div>
-          <div class="dir-cell empty"></div><div class="dir-cell waiting" id="dir-DOWN">DOWN</div><div class="dir-cell empty"></div>
-        </div>
-        <div class="scan-progress"><span id="scan-progress-text">0 / 5 ARAH</span></div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="scan-progress-bar"></div></div>
-        
-        <div style="margin-top:12px;padding:8px;border:1px solid var(--border);background:#030609">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-bottom:6px">INSTRUKSI SCAN:</div>
-          <div id="scan-instruction" style="font-family:'Rajdhani',sans-serif;font-size:13px;color:var(--yellow);font-weight:600;text-align:center;padding:8px">Hadapkan wajah ke arah yang ditunjukkan</div>
-        </div>
-        <div style="margin-top:8px;display:flex;gap:6px">
-          <button class="btn btn-green" style="flex:1" id="btn-start-scan" onclick="beginScan()">MULAI SCAN</button>
-          <button class="btn btn-dim" onclick="cancelScan()">KEMBALI</button>
-        </div>
-      </div>
+  <div class="stats-bar">
+    <div class="stat-block">
+      <div class="stat-val" id="stat-known">0</div>
+      <div class="stat-label">TERDAFTAR</div>
     </div>
-    <hr class="separator">
-
-    <div class="control-section">
-      <div class="section-label">SESI AKTIF</div>
-      <div id="active-sessions-list">
-        <div class="empty-state" style="padding:16px"><div style="font-size:10px">Tidak ada sesi aktif</div></div>
-      </div>
+    <div class="stat-block">
+      <div class="stat-val" style="color:var(--orange)" id="stat-unknown">0</div>
+      <div class="stat-label">UNKNOWN</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-val" style="color:var(--green)" id="stat-present">0</div>
+      <div class="stat-label">HADIR</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-val" style="color:var(--red)" id="stat-intruder">0</div>
+      <div class="stat-label">PENYUSUP</div>
     </div>
   </div>
 
-  <!-- CENTER PANEL -->
-  <div class="camera-area">
-    <div class="cam-feed" id="cam-feed">
-      <div class="cam-placeholder" id="cam-placeholder">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-        <p>KAMERA TIDAK AKTIF</p>
-        <p style="font-size:10px;margin-top:4px">Tekan MODE CCTV atau DAFTARKAN WAJAH</p>
-      </div>
+  <div class="main">
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <div class="panel-title">KONTROL SISTEM</div>
 
-      <img id="live-view" src="" alt="live stream" />
-
-      <div class="scan-overlay" id="scan-overlay">
-        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-        <div class="scan-line"></div>
-      </div>
-
-      <div id="wait-confirm-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;flex-direction:column;gap:16px">
-        <div style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--yellow);text-shadow:0 0 30px rgba(255,230,0,0.6)">READY: <span id="wait-name-display"></span></div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;color:#fff;letter-spacing:2px">TEKAN KLIK "MULAI SCAN" UNTUK MEMULAI</div>
-      </div>
-    </div>
-
-    <div class="cam-controls">
-      <span class="cam-id-badge" id="cam-id-badge">CAM: 0 | RES: 640×480</span>
-    </div>
-  </div>
-
-  <!-- RIGHT PANEL -->
-  <div class="panel">
-    <div class="tab-bar">
-      <button class="tab active" onclick="switchTab('tab-known', this)">TERDAFTAR</button>
-      <button class="tab" onclick="switchTab('tab-unknown', this)">UNKNOWN</button>
-      <button class="tab" onclick="switchTab('tab-log', this)">LOG</button>
-    </div>
-
-    <div class="tab-content active" id="tab-known">
-      <div id="known-list"></div>
-    </div>
-    <div class="tab-content" id="tab-unknown">
-      <div id="unknown-list"></div>
-    </div>
-    <div class="tab-content" id="tab-log">
-      <div id="log-list"></div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL POP-UP GAMBAR -->
-<div id="img-modal" class="img-modal-overlay" onclick="closeImgModal()">
-  <div class="img-modal-content" onclick="event.stopPropagation()">
-    <div style="font-family:'Orbitron',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;width:100%;text-align:left;border-bottom:1px solid var(--border);padding-bottom:8px;">
-      DETAIL WAJAH
-    </div>
-    <img id="img-modal-src" src="" alt="Face Detail" />
-    <button class="btn btn-dim" style="width:100%" onclick="closeImgModal()">TUTUP</button>
-  </div>
-</div>
-
-<!-- UPLOAD REGISTRATION MODAL -->
-<div id="upload-modal" class="upload-modal-overlay" onclick="closeUploadModal()">
-  <div class="upload-modal-content" onclick="event.stopPropagation()">
-    <div class="upload-modal-title">📁 DAFTARKAN WAJAH VIA UPLOAD FILE</div>
-
-    <div class="input-group">
-      <label class="input-label">NAMA USER BARU</label>
-      <input type="text" class="input-field" id="upload-name-input" placeholder="Masukkan nama lengkap..." />
-    </div>
-
-    <div>
-      <div class="input-label" style="margin-bottom:8px">FILE GAMBAR / VIDEO</div>
-      <div class="upload-drop-zone" id="upload-drop-zone"
-           ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-        <input type="file" id="upload-file-input"
-               accept=".jpg,.jpeg,.png,.bmp,.webp,.tiff,.mp4,.avi,.mov,.mkv,.wmv,.flv,.webm,.m4v"
-               onchange="handleFileSelect(this.files[0])">
-        <div class="upload-drop-icon">⬆</div>
-        <div class="upload-drop-text">
-          <strong>Klik atau seret file ke sini</strong><br>
-          Gambar atau video wajah yang jelas
+      <div class="control-section">
+        <div class="section-label">KAMERA</div>
+        <div class="cam-switch">
+          <button class="cam-opt active" id="cam-0" onclick="switchCam(0)">CAM PC</button>
+          <button class="cam-opt" id="cam-1" onclick="switchCam(1)">CCTV</button>
         </div>
-        <div class="upload-ext-badges">
-          <span class="upload-ext-badge img">JPG</span>
-          <span class="upload-ext-badge img">PNG</span>
-          <span class="upload-ext-badge img">BMP</span>
-          <span class="upload-ext-badge img">WEBP</span>
-          <span class="upload-ext-badge vid">MP4</span>
-          <span class="upload-ext-badge vid">AVI</span>
-          <span class="upload-ext-badge vid">MOV</span>
-          <span class="upload-ext-badge vid">MKV</span>
+      </div>
+      <hr class="separator">
+
+      <div class="control-section">
+        <div class="section-label">MODE OPERASI</div>
+        <button class="control-btn" id="btn-scan" onclick="startScanFlow()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" />
+          </svg> DAFTARKAN WAJAH
+        </button>
+        <button class="control-btn" onclick="openUploadModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-2 7v-3H9l3-3 3 3h-2v3h-2z" />
+          </svg> DAFTAR VIA UPLOAD
+        </button>
+        <button class="control-btn" id="btn-run" onclick="startCCTV()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+          </svg> MODE CCTV
+        </button>
+        <button class="control-btn" id="btn-reload" onclick="reloadDB()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+          </svg> RELOAD DATABASE
+        </button>
+        <button class="control-btn" id="btn-retrain" onclick="retrainModel()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+          </svg> LATIH ULANG MODEL
+        </button>
+        <button class="control-btn btn-idle" id="btn-stop" onclick="stopSystem()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h12v12H6z" />
+          </svg> STOP / IDLE
+        </button>
+        <button class="control-btn" onclick="openShutdownConfirm()"
+          style="border-color:var(--red);color:var(--red);margin-top:8px">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7A7 7 0 0 1 5 12c0-2.28 1.09-4.3 2.79-5.61L6.37 4.97A8.968 8.968 0 0 0 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9a9.01 9.01 0 0 0-3.17-6.83z" />
+          </svg> SHUTDOWN SISTEM
+        </button>
+      </div>
+      <hr class="separator">
+
+      <!-- SCAN FORM -->
+      <div id="scan-form" class="scan-form">
+        <div class="section-label">REGISTRASI WAJAH BARU</div>
+        <div id="scan-step-input">
+          <div class="input-group">
+            <label class="input-label">NAMA USER BARU</label>
+            <input type="text" class="input-field" id="scan-name-input" placeholder="Masukkan nama..." />
+          </div>
+          <button class="btn btn-yellow" style="width:100%;margin-bottom:6px" onclick="confirmScanName()">KONFIRMASI
+            NAMA →</button>
+          <button class="btn btn-dim" style="width:100%" onclick="cancelScan()">BATAL SCAN</button>
+        </div>
+
+        <div id="scan-step-scan" style="display:none">
+          <div style="text-align:center;margin-bottom:8px">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent)">SCANNING: <span
+                id="scan-name-display" style="color:var(--yellow)"></span></span>
+          </div>
+          <div class="direction-grid">
+            <div class="dir-cell empty"></div>
+            <div class="dir-cell waiting" id="dir-UP">UP</div>
+            <div class="dir-cell empty"></div>
+            <div class="dir-cell waiting" id="dir-LEFT">LEFT</div>
+            <div class="dir-cell waiting" id="dir-CENTER">CTR</div>
+            <div class="dir-cell waiting" id="dir-RIGHT">RIGHT</div>
+            <div class="dir-cell empty"></div>
+            <div class="dir-cell waiting" id="dir-DOWN">DOWN</div>
+            <div class="dir-cell empty"></div>
+          </div>
+          <div class="scan-progress"><span id="scan-progress-text">0 / 5 ARAH</span></div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="scan-progress-bar"></div>
+          </div>
+
+          <div style="margin-top:12px;padding:8px;border:1px solid var(--border);background:#030609">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);margin-bottom:6px">
+              INSTRUKSI SCAN:</div>
+            <div id="scan-instruction"
+              style="font-family:'Rajdhani',sans-serif;font-size:13px;color:var(--yellow);font-weight:600;text-align:center;padding:8px">
+              Hadapkan wajah ke arah yang ditunjukkan</div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px">
+            <button class="btn btn-green" style="flex:1" id="btn-start-scan" onclick="beginScan()">MULAI SCAN</button>
+            <button class="btn btn-dim" onclick="cancelScan()">KEMBALI</button>
+          </div>
+        </div>
+      </div>
+      <hr class="separator">
+
+      <div class="control-section">
+        <div class="section-label">SESI AKTIF</div>
+        <div id="active-sessions-list">
+          <div class="empty-state" style="padding:16px">
+            <div style="font-size:10px">Tidak ada sesi aktif</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="upload-preview" id="upload-preview">
-      <div id="upload-preview-media"></div>
-      <div class="upload-file-info" id="upload-file-info"></div>
-      <button class="btn btn-dim" style="font-size:9px;padding:4px 12px" onclick="clearUploadFile()">✕ HAPUS FILE</button>
+    <!-- CENTER PANEL -->
+    <div class="camera-area">
+      <div class="cam-feed" id="cam-feed">
+        <div class="cam-placeholder" id="cam-placeholder">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+          </svg>
+          <p>KAMERA TIDAK AKTIF</p>
+          <p style="font-size:10px;margin-top:4px">Tekan MODE CCTV atau DAFTARKAN WAJAH</p>
+        </div>
+
+        <img id="live-view" src="" alt="live stream" />
+
+        <div class="scan-overlay" id="scan-overlay">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <div class="scan-line"></div>
+        </div>
+
+        <div id="wait-confirm-overlay"
+          style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;flex-direction:column;gap:16px">
+          <div
+            style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--yellow);text-shadow:0 0 30px rgba(255,230,0,0.6)">
+            READY: <span id="wait-name-display"></span></div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:16px;color:#fff;letter-spacing:2px">TEKAN KLIK "MULAI
+            SCAN" UNTUK MEMULAI</div>
+        </div>
+      </div>
+
+      <div class="cam-controls">
+        <span class="cam-id-badge" id="cam-id-badge">CAM: 0 | RES: 640×480</span>
+      </div>
     </div>
 
-    <div class="upload-progress-bar-wrap" id="upload-progress-wrap">
-      <div class="upload-progress-bar" id="upload-progress-bar"></div>
-    </div>
+    <!-- RIGHT PANEL -->
+    <div class="panel">
+      <div class="tab-bar">
+        <button class="tab active" onclick="switchTab('tab-known', this)">TERDAFTAR</button>
+        <button class="tab" onclick="switchTab('tab-unknown', this)">UNKNOWN</button>
+        <button class="tab" onclick="switchTab('tab-log', this)">LOG</button>
+      </div>
 
-    <div class="upload-status" id="upload-status"></div>
-
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="btn btn-accent" style="flex:1" onclick="submitUpload()" id="btn-upload-submit">
-        ▶ PROSES & DAFTARKAN
-      </button>
-      <button class="btn btn-dim" onclick="closeUploadModal()">TUTUP</button>
-    </div>
-
-    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:10px;line-height:1.8">
-      ℹ️ <strong style="color:var(--accent)">Tips:</strong> Upload foto tampak depan yang jelas untuk hasil terbaik.
-      Untuk video, sistem akan otomatis memilih frame terbaik dari berbagai arah.
+      <div class="tab-content active" id="tab-known">
+        <div id="known-list"></div>
+      </div>
+      <div class="tab-content" id="tab-unknown">
+        <div id="unknown-list"></div>
+      </div>
+      <div class="tab-content" id="tab-log">
+        <div id="log-list"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- SHUTDOWN CONFIRM OVERLAY -->
-<div id="shutdown-overlay" class="shutdown-overlay">
-  <div class="shutdown-box">
-    <div class="shutdown-icon">⏻</div>
-    <div class="shutdown-title">SHUTDOWN SISTEM</div>
-    <div class="shutdown-msg">
-      Apakah Anda yakin ingin mematikan seluruh sistem?<br>
-      Proses kamera dan server akan dihentikan.
-    </div>
-    <div class="shutdown-btns">
-      <button class="btn btn-red" style="padding:10px 24px" onclick="confirmShutdown()">YA, SHUTDOWN</button>
-      <button class="btn btn-dim" style="padding:10px 24px" onclick="closeShutdownConfirm()">BATAL</button>
+  <!-- MODAL POP-UP GAMBAR -->
+  <div id="img-modal" class="img-modal-overlay" onclick="closeImgModal()">
+    <div class="img-modal-content" onclick="event.stopPropagation()">
+      <div
+        style="font-family:'Orbitron',monospace;font-size:12px;color:var(--accent);letter-spacing:2px;width:100%;text-align:left;border-bottom:1px solid var(--border);padding-bottom:8px;">
+        DETAIL WAJAH
+      </div>
+      <img id="img-modal-src" src="" alt="Face Detail" />
+      <button class="btn btn-dim" style="width:100%" onclick="closeImgModal()">TUTUP</button>
     </div>
   </div>
-</div>
 
-<script>
-// =============================================
-// API INTEGRATION
-// =============================================
-const API_URL = window.location.origin; 
-let mode = 'IDLE';
-let camActive = false;
+  <!-- UPLOAD REGISTRATION MODAL -->
+  <div id="upload-modal" class="upload-modal-overlay" onclick="closeUploadModal()">
+    <div class="upload-modal-content" onclick="event.stopPropagation()">
+      <div class="upload-modal-title">📁 DAFTARKAN WAJAH VIA UPLOAD FILE</div>
 
-async function sendCmd(cmd, data={}) {
-  try {
-    await fetch(`${API_URL}/command`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({cmd, data})
-    });
-  } catch(e) { console.error("Gagal terhubung ke Backend Python", e); }
-}
+      <div class="input-group">
+        <label class="input-label">NAMA USER BARU</label>
+        <input type="text" class="input-field" id="upload-name-input" placeholder="Masukkan nama lengkap..." />
+      </div>
 
-setInterval(updateClock, 1000);
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent = now.toTimeString().split(' ')[0];
-}
+      <div>
+        <div class="input-label" style="margin-bottom:8px">FILE GAMBAR / VIDEO</div>
+        <div class="upload-drop-zone" id="upload-drop-zone" ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <input type="file" id="upload-file-input"
+            accept=".jpg,.jpeg,.png,.bmp,.webp,.tiff,.mp4,.avi,.mov,.mkv,.wmv,.flv,.webm,.m4v"
+            onchange="handleFileSelect(this.files[0])">
+          <div class="upload-drop-icon">⬆</div>
+          <div class="upload-drop-text">
+            <strong>Klik atau seret file ke sini</strong><br>
+            Gambar atau video wajah yang jelas
+          </div>
+          <div class="upload-ext-badges">
+            <span class="upload-ext-badge img">JPG</span>
+            <span class="upload-ext-badge img">PNG</span>
+            <span class="upload-ext-badge img">BMP</span>
+            <span class="upload-ext-badge img">WEBP</span>
+            <span class="upload-ext-badge vid">MP4</span>
+            <span class="upload-ext-badge vid">AVI</span>
+            <span class="upload-ext-badge vid">MOV</span>
+            <span class="upload-ext-badge vid">MKV</span>
+          </div>
+        </div>
+      </div>
 
-// =============================================
-// POP-UP GAMBAR
-// =============================================
-function showImgModal(src) {
-  document.getElementById('img-modal-src').src = src;
-  document.getElementById('img-modal').classList.add('active');
-}
-function closeImgModal() {
-  document.getElementById('img-modal').classList.remove('active');
-  setTimeout(() => document.getElementById('img-modal-src').src = '', 300);
-}
+      <div class="upload-preview" id="upload-preview">
+        <div id="upload-preview-media"></div>
+        <div class="upload-file-info" id="upload-file-info"></div>
+        <button class="btn btn-dim" style="font-size:9px;padding:4px 12px" onclick="clearUploadFile()">✕ HAPUS
+          FILE</button>
+      </div>
 
-// =============================================
-// CAMERA CONTROLS
-// =============================================
-function switchCam(id) {
-  document.querySelectorAll('.cam-opt').forEach((b, i) => b.className = 'cam-opt' + (i === id ? ' active' : ''));
-  document.getElementById('cam-id-badge').textContent = `CAM: ${id} | RES: 640×480`;
-  sendCmd('switch_cam', {cam_id: id});
-}
+      <div class="upload-progress-bar-wrap" id="upload-progress-wrap">
+        <div class="upload-progress-bar" id="upload-progress-bar"></div>
+      </div>
 
-function activateCamera() {
-  const placeholder = document.getElementById('cam-placeholder');
-  const liveView = document.getElementById('live-view');
-  placeholder.style.display = 'none';
-  liveView.style.display = 'block';
-  if (!camActive) {
-    liveView.src = `${API_URL}/stream?t=${Date.now()}`;
-    camActive = true;
-  }
-}
+      <div class="upload-status" id="upload-status"></div>
 
-function deactivateCamera() {
-  const placeholder = document.getElementById('cam-placeholder');
-  const liveView = document.getElementById('live-view');
-  placeholder.style.display = 'flex';
-  liveView.style.display = 'none';
-  liveView.src = "";
-  camActive = false;
-}
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-accent" style="flex:1" onclick="submitUpload()" id="btn-upload-submit">
+          ▶ PROSES & DAFTARKAN
+        </button>
+        <button class="btn btn-dim" onclick="closeUploadModal()">TUTUP</button>
+      </div>
 
-// =============================================
-// MODES
-// =============================================
-function setMode(m) {
-  mode = m;
-  const badge = document.getElementById('header-mode-badge');
-  const dot = document.getElementById('status-dot');
-  const text = document.getElementById('status-text');
+      <div
+        style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:10px;line-height:1.8">
+        ℹ️ <strong style="color:var(--accent)">Tips:</strong> Upload foto tampak depan yang jelas untuk hasil terbaik.
+        Untuk video, sistem akan otomatis memilih frame terbaik dari berbagai arah.
+      </div>
+    </div>
+  </div>
 
-  badge.className = 'status-badge ' + m.toLowerCase().replace('_', '-');
-  text.textContent = m.replace('_', ' ');
-  dot.className = 'dot' + (m !== 'IDLE' ? ' blink' : '');
+  <!-- SHUTDOWN CONFIRM OVERLAY -->
+  <div id="shutdown-overlay" class="shutdown-overlay">
+    <div class="shutdown-box">
+      <div class="shutdown-icon">⏻</div>
+      <div class="shutdown-title">SHUTDOWN SISTEM</div>
+      <div class="shutdown-msg">
+        Apakah Anda yakin ingin mematikan seluruh sistem?<br>
+        Proses kamera dan server akan dihentikan.
+      </div>
+      <div class="shutdown-btns">
+        <button class="btn btn-red" style="padding:10px 24px" onclick="confirmShutdown()">YA, SHUTDOWN</button>
+        <button class="btn btn-dim" style="padding:10px 24px" onclick="closeShutdownConfirm()">BATAL</button>
+      </div>
+    </div>
+  </div>
 
-  document.getElementById('btn-run').className = 'control-btn' + (m === 'RUN' ? ' active-mode' : '');
-  document.getElementById('btn-scan').className = 'control-btn' + (m === 'SCAN' || m === 'WAIT_CONFIRM' ? ' active-mode' : '');
+  <script>
+    // =============================================
+    // API INTEGRATION
+    // =============================================
+    const API_URL = window.location.origin;
+    let mode = 'IDLE';
+    let camActive = false;
 
-  if (m === 'RUN' || m === 'SCAN' || m === 'WAIT_CONFIRM') {
-    activateCamera();
-  } else {
-    deactivateCamera();
-  }
-}
+    async function sendCmd(cmd, data = {}) {
+      try {
+        await fetch(`${API_URL}/command`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cmd, data })
+        });
+      } catch (e) { console.error("Gagal terhubung ke Backend Python", e); }
+    }
 
-function startCCTV() { sendCmd('set_mode', {mode: 'RUN'}); }
-function stopSystem() { 
-  sendCmd('stop'); 
-  document.getElementById('scan-form').classList.remove('visible');
-  document.getElementById('scan-overlay').classList.remove('active');
-  document.getElementById('wait-confirm-overlay').style.display = 'none';
-}
-function reloadDB() { sendCmd('reload_db'); }
+    setInterval(updateClock, 1000);
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toTimeString().split(' ')[0];
+    }
 
-// =============================================
-// REGISTRATION
-// =============================================
-function startScanFlow() {
-  document.getElementById('scan-form').classList.add('visible');
-  document.getElementById('scan-step-input').style.display = 'block';
-  document.getElementById('scan-step-scan').style.display = 'none';
-  document.getElementById('scan-name-input').value = '';
-  document.getElementById('scan-name-input').focus();
-}
+    // =============================================
+    // POP-UP GAMBAR
+    // =============================================
+    function showImgModal(src) {
+      document.getElementById('img-modal-src').src = src;
+      document.getElementById('img-modal').classList.add('active');
+    }
+    function closeImgModal() {
+      document.getElementById('img-modal').classList.remove('active');
+      setTimeout(() => document.getElementById('img-modal-src').src = '', 300);
+    }
 
-function confirmScanName() {
-  const scanName = document.getElementById('scan-name-input').value.trim();
-  if (!scanName) return;
-  document.getElementById('scan-step-input').style.display = 'none';
-  document.getElementById('scan-step-scan').style.display = 'block';
-  document.getElementById('scan-name-display').textContent = scanName;
-  document.getElementById('wait-name-display').textContent = scanName.toUpperCase();
-  document.getElementById('wait-confirm-overlay').style.display = 'flex';
-  document.getElementById('scan-overlay').classList.add('active');
-  sendCmd('scan_start', {name: scanName});
-}
+    // =============================================
+    // CAMERA CONTROLS
+    // =============================================
+    function switchCam(id) {
+      document.querySelectorAll('.cam-opt').forEach((b, i) => b.className = 'cam-opt' + (i === id ? ' active' : ''));
+      document.getElementById('cam-id-badge').textContent = `CAM: ${id} | RES: 640×480`;
+      sendCmd('switch_cam', { cam_id: id });
+    }
 
-function beginScan() {
-  document.getElementById('wait-confirm-overlay').style.display = 'none';
-  sendCmd('scan_begin');
-}
+    function activateCamera() {
+      const placeholder = document.getElementById('cam-placeholder');
+      const liveView = document.getElementById('live-view');
+      placeholder.style.display = 'none';
+      liveView.style.display = 'block';
+      if (!camActive) {
+        liveView.src = `${API_URL}/stream?t=${Date.now()}`;
+        camActive = true;
+      }
+    }
 
-function cancelScan() {
-  sendCmd('stop');
-  document.getElementById('scan-form').classList.remove('visible');
-  document.getElementById('scan-overlay').classList.remove('active');
-  document.getElementById('wait-confirm-overlay').style.display = 'none';
-}
+    function deactivateCamera() {
+      const placeholder = document.getElementById('cam-placeholder');
+      const liveView = document.getElementById('live-view');
+      placeholder.style.display = 'flex';
+      liveView.style.display = 'none';
+      liveView.src = "";
+      camActive = false;
+    }
 
-// =============================================
-// POLLING (Menerima Data Realtime)
-// =============================================
-setInterval(async () => {
-  try {
-    const res = await fetch(`${API_URL}/state`);
-    const state = await res.json();
-    updateUI(state);
-  } catch(e) {}
-}, 300);
+    // =============================================
+    // MODES
+    // =============================================
+    function setMode(m) {
+      mode = m;
+      const badge = document.getElementById('header-mode-badge');
+      const dot = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
 
-setInterval(async () => {
-  try {
-    const res = await fetch(`${API_URL}/logs`);
-    const data = await res.json();
-    renderLog(data.logs);
-  } catch(e) {}
-}, 1000);
+      badge.className = 'status-badge ' + m.toLowerCase().replace('_', '-');
+      text.textContent = m.replace('_', ' ');
+      dot.className = 'dot' + (m !== 'IDLE' ? ' blink' : '');
 
-function updateUI(state) {
-  if (mode !== state.mode) {
-    setMode(state.mode);
-  }
+      document.getElementById('btn-run').className = 'control-btn' + (m === 'RUN' ? ' active-mode' : '');
+      document.getElementById('btn-scan').className = 'control-btn' + (m === 'SCAN' || m === 'WAIT_CONFIRM' ? ' active-mode' : '');
 
-  // Scan progress
-  if (state.mode === 'SCAN') {
-    const sp = state.scan_progress;
-    ['LEFT', 'RIGHT', 'UP', 'DOWN', 'CENTER'].forEach(d => {
-      const el = document.getElementById('dir-' + d);
-      if (sp.captured.includes(d)) el.className = 'dir-cell done';
-      else if (sp.current_dir === d) el.className = 'dir-cell active';
-      else el.className = 'dir-cell waiting';
-    });
-    document.getElementById('scan-progress-text').textContent = `${sp.captured.length} / 5 ARAH`;
-    document.getElementById('scan-progress-bar').style.width = `${sp.captured.length * 20}%`;
-    if (sp.current_dir) document.getElementById('scan-instruction').textContent = `Hadapkan wajah ke: ${sp.current_dir}`;
-  }
+      if (m === 'RUN' || m === 'SCAN' || m === 'WAIT_CONFIRM') {
+        activateCamera();
+      } else {
+        deactivateCamera();
+      }
+    }
 
-  // Stats
-  const statKnown = state.known_db.length;
-  const statUnknown = state.unknown_db.length;
-  const actNames = Object.keys(state.active_sessions);
-  const statPresent = actNames.filter(n => state.known_db.includes(n)).length;
-  const statIntruder = actNames.filter(n => !state.known_db.includes(n)).length;
+    function startCCTV() { sendCmd('set_mode', { mode: 'RUN' }); }
+    function stopSystem() {
+      sendCmd('stop');
+      document.getElementById('scan-form').classList.remove('visible');
+      document.getElementById('scan-overlay').classList.remove('active');
+      document.getElementById('wait-confirm-overlay').style.display = 'none';
+    }
+    function reloadDB() { sendCmd('reload_db'); }
 
-  document.getElementById('stat-known').textContent = statKnown;
-  document.getElementById('stat-unknown').textContent = statUnknown;
-  document.getElementById('stat-present').textContent = statPresent;
-  document.getElementById('stat-intruder').textContent = statIntruder;
+    async function retrainModel() {
+      const btn = document.getElementById('btn-retrain');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2v4c4.42 0 8 3.58 8 8s-3.58 8-8 8-8-3.58-8-8H2c0 5.52 4.48 10 10 10s10-4.48 10-10S17.52 2 12 2z"/></svg> MEMPROSES...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_URL}/retrain`, { method: 'POST' });
+        const data = await res.json();
+        alert(data.message);
+      } catch (e) {
+        alert("Gagal memulai proses latih ulang.");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
 
-  // DB rendering
-  renderKnown(state.known_db, state.active_sessions);
-  renderUnknown(state.unknown_db);
-  updateSessionsList(state.active_sessions, state.known_db);
+    // =============================================
+    // REGISTRATION
+    // =============================================
+    function startScanFlow() {
+      document.getElementById('scan-form').classList.add('visible');
+      document.getElementById('scan-step-input').style.display = 'block';
+      document.getElementById('scan-step-scan').style.display = 'none';
+      document.getElementById('scan-name-input').value = '';
+      document.getElementById('scan-name-input').focus();
+    }
 
-  document.getElementById('alert-banner').className = 'alert-banner alert-intruder' + (statIntruder > 0 ? ' active' : '');
-}
+    function confirmScanName() {
+      const scanName = document.getElementById('scan-name-input').value.trim();
+      if (!scanName) return;
+      document.getElementById('scan-step-input').style.display = 'none';
+      document.getElementById('scan-step-scan').style.display = 'block';
+      document.getElementById('scan-name-display').textContent = scanName;
+      document.getElementById('wait-name-display').textContent = scanName.toUpperCase();
+      document.getElementById('wait-confirm-overlay').style.display = 'flex';
+      document.getElementById('scan-overlay').classList.add('active');
+      sendCmd('scan_start', { name: scanName });
+    }
 
-function renderKnown(names, activeSessions) {
-  const container = document.getElementById('known-list');
-  if (names.length === 0) {
-    container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg><div>Belum ada data terdaftar</div></div>`;
-    return;
-  }
-  
-  // Urutkan nama abjad A-Z
-  names.sort((a, b) => a.localeCompare(b));
+    function beginScan() {
+      document.getElementById('wait-confirm-overlay').style.display = 'none';
+      sendCmd('scan_begin');
+    }
 
-  container.innerHTML = names.map(name => {
-    const isPresent = name in activeSessions;
-    return `
+    function cancelScan() {
+      sendCmd('stop');
+      document.getElementById('scan-form').classList.remove('visible');
+      document.getElementById('scan-overlay').classList.remove('active');
+      document.getElementById('wait-confirm-overlay').style.display = 'none';
+    }
+
+    // =============================================
+    // POLLING (Menerima Data Realtime)
+    // =============================================
+    setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/state`);
+        const state = await res.json();
+        updateUI(state);
+      } catch (e) { }
+    }, 300);
+
+    setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/logs`);
+        const data = await res.json();
+        renderLog(data.logs);
+      } catch (e) { }
+    }, 1000);
+
+    function updateUI(state) {
+      if (mode !== state.mode) {
+        setMode(state.mode);
+      }
+
+      // Scan progress
+      if (state.mode === 'SCAN') {
+        const sp = state.scan_progress;
+        ['LEFT', 'RIGHT', 'UP', 'DOWN', 'CENTER'].forEach(d => {
+          const el = document.getElementById('dir-' + d);
+          if (sp.captured.includes(d)) el.className = 'dir-cell done';
+          else if (sp.current_dir === d) el.className = 'dir-cell active';
+          else el.className = 'dir-cell waiting';
+        });
+        document.getElementById('scan-progress-text').textContent = `${sp.captured.length} / 5 ARAH`;
+        document.getElementById('scan-progress-bar').style.width = `${sp.captured.length * 20}%`;
+        if (sp.current_dir) document.getElementById('scan-instruction').textContent = `Hadapkan wajah ke: ${sp.current_dir}`;
+      }
+
+      // Stats
+      const statKnown = state.known_db.length;
+      const statUnknown = state.unknown_db.length;
+      const actNames = Object.keys(state.active_sessions);
+      const statPresent = actNames.filter(n => state.known_db.includes(n)).length;
+      const statIntruder = actNames.filter(n => !state.known_db.includes(n)).length;
+
+      document.getElementById('stat-known').textContent = statKnown;
+      document.getElementById('stat-unknown').textContent = statUnknown;
+      document.getElementById('stat-present').textContent = statPresent;
+      document.getElementById('stat-intruder').textContent = statIntruder;
+
+      // DB rendering
+      renderKnown(state.known_db, state.active_sessions);
+      renderUnknown(state.unknown_db, state.db_version);
+      updateSessionsList(state.active_sessions, state.known_db);
+
+      document.getElementById('alert-banner').className = 'alert-banner alert-intruder' + (statIntruder > 0 ? ' active' : '');
+    }
+
+    function renderKnown(names, activeSessions) {
+      const container = document.getElementById('known-list');
+      if (names.length === 0) {
+        container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg><div>Belum ada data terdaftar</div></div>`;
+        return;
+      }
+
+      // Urutkan nama abjad A-Z
+      names.sort((a, b) => a.localeCompare(b));
+
+      container.innerHTML = names.map(name => {
+        const isPresent = name in activeSessions;
+        return `
     <div class="person-card ${isPresent ? 'present' : ''}">
       <div class="person-avatar">
         <img src="${API_URL}/known_image/${name}/CENTER" 
@@ -834,29 +1904,29 @@ function renderKnown(names, activeSessions) {
       </div>
       <div class="person-status ${isPresent ? 'status-in' : 'status-out'}">${isPresent ? 'HADIR' : 'OUT'}</div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function renderUnknown(ids) {
-  const container = document.getElementById('unknown-list');
-  if (ids.length === 0) {
-    container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg><div>Tidak ada unknown</div></div>`;
-    return;
-  }
+    function renderUnknown(ids, dbVersion = '') {
+      const container = document.getElementById('unknown-list');
+      if (ids.length === 0) {
+        container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg><div>Tidak ada unknown</div></div>`;
+        return;
+      }
 
-  // LOGIKA PENGURUTAN NUMERIK UNTUK UNKNOWN (U1, U2, ... U10, U11)
-  ids.sort((a, b) => {
-    // Menghapus semua karakter non-angka dan mengkonversinya ke Integer
-    let numA = parseInt(a.replace(/\D/g, '')) || 0;
-    let numB = parseInt(b.replace(/\D/g, '')) || 0;
-    return numA - numB;
-  });
+      // LOGIKA PENGURUTAN NUMERIK UNTUK UNKNOWN (U1, U2, ... U10, U11)
+      ids.sort((a, b) => {
+        // Menghapus semua karakter non-angka dan mengkonversinya ke Integer
+        let numA = parseInt(a.replace(/\D/g, '')) || 0;
+        let numB = parseInt(b.replace(/\D/g, '')) || 0;
+        return numA - numB;
+      });
 
-  container.innerHTML = ids.map(id => {
-    return `
+      container.innerHTML = ids.map(id => {
+        return `
     <div class="person-card intruder">
       <div class="person-avatar">
-        <img src="${API_URL}/unknown_image/${id}" 
+        <img src="${API_URL}/unknown_image/${id}?v=${dbVersion}" 
              onerror="this.style.display='none'" 
              onclick="showImgModal(this.src); event.stopPropagation();" 
              style="cursor: zoom-in;" 
@@ -868,282 +1938,282 @@ function renderUnknown(ids) {
       </div>
       <div class="person-status status-intruder">PENYUSUP</div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function updateSessionsList(sessions, knownDB) {
-  const container = document.getElementById('active-sessions-list');
-  const names = Object.keys(sessions);
-  if (names.length === 0) {
-    container.innerHTML = `<div class="empty-state" style="padding:16px"><div style="font-size:10px">Tidak ada sesi aktif</div></div>`;
-    return;
-  }
-  container.innerHTML = names.map(name => {
-    const isKnown = knownDB.includes(name);
-    const type = isKnown ? 'TERDAFTAR' : 'PENYUSUP';
-    const color = isKnown ? 'var(--green)' : 'var(--orange)';
-    return `<div class="session-item">
+    function updateSessionsList(sessions, knownDB) {
+      const container = document.getElementById('active-sessions-list');
+      const names = Object.keys(sessions);
+      if (names.length === 0) {
+        container.innerHTML = `<div class="empty-state" style="padding:16px"><div style="font-size:10px">Tidak ada sesi aktif</div></div>`;
+        return;
+      }
+      container.innerHTML = names.map(name => {
+        const isKnown = knownDB.includes(name);
+        const type = isKnown ? 'TERDAFTAR' : 'PENYUSUP';
+        const color = isKnown ? 'var(--green)' : 'var(--orange)';
+        return `<div class="session-item">
       <div class="session-dot" style="background:${color}"></div>
       <span class="session-name" style="color:${color}">${name}</span>
       <span class="session-type">${type}</span>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function renderLog(logEntries) {
-  const container = document.getElementById('log-list');
-  if (!logEntries || logEntries.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div>Log kosong</div></div>`;
-    return;
-  }
-  container.innerHTML = logEntries.reverse().slice(0, 80).map(e => {
-    let cls = 'system';
-    if (e.action === 'MASUK') cls = 'masuk';
-    else if (e.action === 'KELUAR') cls = 'keluar';
-    else if (e.status === 'PENYUSUP') cls = 'unknown';
+    function renderLog(logEntries) {
+      const container = document.getElementById('log-list');
+      if (!logEntries || logEntries.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div>Log kosong</div></div>`;
+        return;
+      }
+      container.innerHTML = logEntries.reverse().slice(0, 80).map(e => {
+        let cls = 'system';
+        if (e.action === 'MASUK') cls = 'masuk';
+        else if (e.action === 'KELUAR') cls = 'keluar';
+        else if (e.status === 'PENYUSUP') cls = 'unknown';
 
-    let dotColor = 'var(--text-dim)';
-    if (cls === 'masuk') dotColor = 'var(--green)';
-    else if (cls === 'unknown') dotColor = 'var(--red)';
-    else if (cls === 'system') dotColor = 'var(--accent)';
+        let dotColor = 'var(--text-dim)';
+        if (cls === 'masuk') dotColor = 'var(--green)';
+        else if (cls === 'unknown') dotColor = 'var(--red)';
+        else if (cls === 'system') dotColor = 'var(--accent)';
 
-    return `<div class="log-entry ${cls}">
+        return `<div class="log-entry ${cls}">
       <div class="log-dot" style="background:${dotColor}"></div>
       <div>
         <span class="log-time">${e.time}</span><span class="log-name"> ${e.name}</span>
         <div class="log-action">${e.status} — ${e.action}</div>
       </div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function switchTab(id, btn) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  btn.classList.add('active');
-}
+    function switchTab(id, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
 
-// =============================================
-// UPLOAD REGISTRATION
-// =============================================
-let selectedUploadFile = null;
+    // =============================================
+    // UPLOAD REGISTRATION
+    // =============================================
+    let selectedUploadFile = null;
 
-const ALLOWED_IMAGE_EXT = ['jpg','jpeg','png','bmp','webp','tiff'];
-const ALLOWED_VIDEO_EXT = ['mp4','avi','mov','mkv','wmv','flv','webm','m4v'];
-const ALLOWED_ALL_EXT = [...ALLOWED_IMAGE_EXT, ...ALLOWED_VIDEO_EXT];
+    const ALLOWED_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'bmp', 'webp', 'tiff'];
+    const ALLOWED_VIDEO_EXT = ['mp4', 'avi', 'mov', 'mkv', 'wmv', 'flv', 'webm', 'm4v'];
+    const ALLOWED_ALL_EXT = [...ALLOWED_IMAGE_EXT, ...ALLOWED_VIDEO_EXT];
 
-function openUploadModal() {
-  clearUploadState();
-  document.getElementById('upload-modal').classList.add('active');
-  document.getElementById('upload-name-input').focus();
-}
+    function openUploadModal() {
+      clearUploadState();
+      document.getElementById('upload-modal').classList.add('active');
+      document.getElementById('upload-name-input').focus();
+    }
 
-function closeUploadModal() {
-  document.getElementById('upload-modal').classList.remove('active');
-  clearUploadState();
-}
+    function closeUploadModal() {
+      document.getElementById('upload-modal').classList.remove('active');
+      clearUploadState();
+    }
 
-function clearUploadState() {
-  selectedUploadFile = null;
-  document.getElementById('upload-name-input').value = '';
-  document.getElementById('upload-file-input').value = '';
-  document.getElementById('upload-preview').classList.remove('visible');
-  document.getElementById('upload-preview-media').innerHTML = '';
-  document.getElementById('upload-file-info').textContent = '';
-  setUploadStatus('', '');
-  setUploadProgress(false, 0);
-  document.getElementById('btn-upload-submit').disabled = false;
-}
-
-function clearUploadFile() {
-  selectedUploadFile = null;
-  document.getElementById('upload-file-input').value = '';
-  document.getElementById('upload-preview').classList.remove('visible');
-  document.getElementById('upload-preview-media').innerHTML = '';
-  document.getElementById('upload-file-info').textContent = '';
-  setUploadStatus('', '');
-}
-
-function getFileExt(filename) {
-  return filename.includes('.') ? filename.split('.').pop().toLowerCase() : '';
-}
-
-function validateFileExt(filename) {
-  const ext = getFileExt(filename);
-  if (!ALLOWED_ALL_EXT.includes(ext)) {
-    return { valid: false, ext };
-  }
-  return { valid: true, ext, isImage: ALLOWED_IMAGE_EXT.includes(ext), isVideo: ALLOWED_VIDEO_EXT.includes(ext) };
-}
-
-function handleFileSelect(file) {
-  if (!file) return;
-
-  const result = validateFileExt(file.name);
-  if (!result.valid) {
-    setUploadStatus(`❌ Format ".${result.ext || 'tidak dikenal'}" tidak didukung!\nHanya boleh: gambar (jpg, png, bmp, webp) atau video (mp4, avi, mov, mkv, dll).`, 'error');
-    document.getElementById('upload-file-input').value = '';
-    selectedUploadFile = null;
-    return;
-  }
-
-  selectedUploadFile = file;
-  setUploadStatus('', '');
-
-  // Tampilkan preview
-  const preview = document.getElementById('upload-preview');
-  const mediaEl = document.getElementById('upload-preview-media');
-  const infoEl = document.getElementById('upload-file-info');
-  const url = URL.createObjectURL(file);
-
-  mediaEl.innerHTML = '';
-  if (result.isImage) {
-    const img = document.createElement('img');
-    img.src = url;
-    img.style.maxWidth = '100%';
-    img.style.maxHeight = '160px';
-    img.style.objectFit = 'contain';
-    img.style.border = '1px solid var(--border)';
-    mediaEl.appendChild(img);
-  } else {
-    const vid = document.createElement('video');
-    vid.src = url;
-    vid.controls = true;
-    vid.style.maxWidth = '100%';
-    vid.style.maxHeight = '160px';
-    vid.style.border = '1px solid var(--border)';
-    mediaEl.appendChild(vid);
-  }
-
-  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-  const typeLabel = result.isImage ? '🖼 GAMBAR' : '🎬 VIDEO';
-  infoEl.textContent = `${typeLabel} | ${file.name} | ${sizeMB} MB`;
-  preview.classList.add('visible');
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  document.getElementById('upload-drop-zone').classList.add('dragover');
-}
-
-function handleDragLeave(e) {
-  document.getElementById('upload-drop-zone').classList.remove('dragover');
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-drop-zone').classList.remove('dragover');
-  const files = e.dataTransfer.files;
-  if (files && files.length > 0) {
-    handleFileSelect(files[0]);
-  }
-}
-
-function setUploadStatus(msg, type) {
-  const el = document.getElementById('upload-status');
-  el.textContent = msg;
-  el.className = 'upload-status' + (msg ? ' visible ' + type : '');
-}
-
-function setUploadProgress(show, pct) {
-  const wrap = document.getElementById('upload-progress-wrap');
-  const bar = document.getElementById('upload-progress-bar');
-  wrap.className = 'upload-progress-bar-wrap' + (show ? ' visible' : '');
-  bar.style.width = pct + '%';
-}
-
-async function submitUpload() {
-  const name = document.getElementById('upload-name-input').value.trim();
-
-  if (!name) {
-    setUploadStatus('❌ Nama tidak boleh kosong!', 'error');
-    document.getElementById('upload-name-input').focus();
-    return;
-  }
-
-  if (!selectedUploadFile) {
-    setUploadStatus('❌ Pilih file gambar atau video terlebih dahulu!', 'error');
-    return;
-  }
-
-  // Double-check ekstensi di sisi client
-  const result = validateFileExt(selectedUploadFile.name);
-  if (!result.valid) {
-    setUploadStatus(`❌ Format file tidak didukung: .${result.ext || '?'}`, 'error');
-    return;
-  }
-
-  document.getElementById('btn-upload-submit').disabled = true;
-  setUploadStatus('⏳ Mengunggah dan memproses file... Mohon tunggu.', 'loading');
-  setUploadProgress(true, 10);
-
-  const formData = new FormData();
-  formData.append('name', name);
-  formData.append('file', selectedUploadFile);
-
-  // Animasi progress semu saat upload
-  let prog = 10;
-  const progInterval = setInterval(() => {
-    prog = Math.min(prog + 5, 85);
-    setUploadProgress(true, prog);
-  }, 400);
-
-  try {
-    const res = await fetch(`${API_URL}/register_upload`, {
-      method: 'POST',
-      body: formData
-    });
-    clearInterval(progInterval);
-    setUploadProgress(true, 100);
-
-    const data = await res.json();
-    if (data.ok) {
-      setUploadStatus(`✅ ${data.message}`, 'success');
-      setTimeout(() => {
-        setUploadProgress(false, 0);
-      }, 1000);
-    } else {
-      setUploadStatus(`❌ ${data.error}`, 'error');
+    function clearUploadState() {
+      selectedUploadFile = null;
+      document.getElementById('upload-name-input').value = '';
+      document.getElementById('upload-file-input').value = '';
+      document.getElementById('upload-preview').classList.remove('visible');
+      document.getElementById('upload-preview-media').innerHTML = '';
+      document.getElementById('upload-file-info').textContent = '';
+      setUploadStatus('', '');
       setUploadProgress(false, 0);
       document.getElementById('btn-upload-submit').disabled = false;
     }
-  } catch(e) {
-    clearInterval(progInterval);
-    setUploadProgress(false, 0);
-    setUploadStatus('❌ Gagal terhubung ke server. Pastikan sistem berjalan.', 'error');
-    document.getElementById('btn-upload-submit').disabled = false;
-  }
-}
 
-// Allow Enter key on name input to proceed
-document.addEventListener('DOMContentLoaded', () => {
-  const nameInput = document.getElementById('upload-name-input');
-  if (nameInput) {
-    nameInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') submitUpload();
+    function clearUploadFile() {
+      selectedUploadFile = null;
+      document.getElementById('upload-file-input').value = '';
+      document.getElementById('upload-preview').classList.remove('visible');
+      document.getElementById('upload-preview-media').innerHTML = '';
+      document.getElementById('upload-file-info').textContent = '';
+      setUploadStatus('', '');
+    }
+
+    function getFileExt(filename) {
+      return filename.includes('.') ? filename.split('.').pop().toLowerCase() : '';
+    }
+
+    function validateFileExt(filename) {
+      const ext = getFileExt(filename);
+      if (!ALLOWED_ALL_EXT.includes(ext)) {
+        return { valid: false, ext };
+      }
+      return { valid: true, ext, isImage: ALLOWED_IMAGE_EXT.includes(ext), isVideo: ALLOWED_VIDEO_EXT.includes(ext) };
+    }
+
+    function handleFileSelect(file) {
+      if (!file) return;
+
+      const result = validateFileExt(file.name);
+      if (!result.valid) {
+        setUploadStatus(`❌ Format ".${result.ext || 'tidak dikenal'}" tidak didukung!\nHanya boleh: gambar (jpg, png, bmp, webp) atau video (mp4, avi, mov, mkv, dll).`, 'error');
+        document.getElementById('upload-file-input').value = '';
+        selectedUploadFile = null;
+        return;
+      }
+
+      selectedUploadFile = file;
+      setUploadStatus('', '');
+
+      // Tampilkan preview
+      const preview = document.getElementById('upload-preview');
+      const mediaEl = document.getElementById('upload-preview-media');
+      const infoEl = document.getElementById('upload-file-info');
+      const url = URL.createObjectURL(file);
+
+      mediaEl.innerHTML = '';
+      if (result.isImage) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '160px';
+        img.style.objectFit = 'contain';
+        img.style.border = '1px solid var(--border)';
+        mediaEl.appendChild(img);
+      } else {
+        const vid = document.createElement('video');
+        vid.src = url;
+        vid.controls = true;
+        vid.style.maxWidth = '100%';
+        vid.style.maxHeight = '160px';
+        vid.style.border = '1px solid var(--border)';
+        mediaEl.appendChild(vid);
+      }
+
+      const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+      const typeLabel = result.isImage ? '🖼 GAMBAR' : '🎬 VIDEO';
+      infoEl.textContent = `${typeLabel} | ${file.name} | ${sizeMB} MB`;
+      preview.classList.add('visible');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('upload-drop-zone').classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+      document.getElementById('upload-drop-zone').classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('upload-drop-zone').classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        handleFileSelect(files[0]);
+      }
+    }
+
+    function setUploadStatus(msg, type) {
+      const el = document.getElementById('upload-status');
+      el.textContent = msg;
+      el.className = 'upload-status' + (msg ? ' visible ' + type : '');
+    }
+
+    function setUploadProgress(show, pct) {
+      const wrap = document.getElementById('upload-progress-wrap');
+      const bar = document.getElementById('upload-progress-bar');
+      wrap.className = 'upload-progress-bar-wrap' + (show ? ' visible' : '');
+      bar.style.width = pct + '%';
+    }
+
+    async function submitUpload() {
+      const name = document.getElementById('upload-name-input').value.trim();
+
+      if (!name) {
+        setUploadStatus('❌ Nama tidak boleh kosong!', 'error');
+        document.getElementById('upload-name-input').focus();
+        return;
+      }
+
+      if (!selectedUploadFile) {
+        setUploadStatus('❌ Pilih file gambar atau video terlebih dahulu!', 'error');
+        return;
+      }
+
+      // Double-check ekstensi di sisi client
+      const result = validateFileExt(selectedUploadFile.name);
+      if (!result.valid) {
+        setUploadStatus(`❌ Format file tidak didukung: .${result.ext || '?'}`, 'error');
+        return;
+      }
+
+      document.getElementById('btn-upload-submit').disabled = true;
+      setUploadStatus('⏳ Mengunggah dan memproses file... Mohon tunggu.', 'loading');
+      setUploadProgress(true, 10);
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('file', selectedUploadFile);
+
+      // Animasi progress semu saat upload
+      let prog = 10;
+      const progInterval = setInterval(() => {
+        prog = Math.min(prog + 5, 85);
+        setUploadProgress(true, prog);
+      }, 400);
+
+      try {
+        const res = await fetch(`${API_URL}/register_upload`, {
+          method: 'POST',
+          body: formData
+        });
+        clearInterval(progInterval);
+        setUploadProgress(true, 100);
+
+        const data = await res.json();
+        if (data.ok) {
+          setUploadStatus(`✅ ${data.message}`, 'success');
+          setTimeout(() => {
+            setUploadProgress(false, 0);
+          }, 1000);
+        } else {
+          setUploadStatus(`❌ ${data.error}`, 'error');
+          setUploadProgress(false, 0);
+          document.getElementById('btn-upload-submit').disabled = false;
+        }
+      } catch (e) {
+        clearInterval(progInterval);
+        setUploadProgress(false, 0);
+        setUploadStatus('❌ Gagal terhubung ke server. Pastikan sistem berjalan.', 'error');
+        document.getElementById('btn-upload-submit').disabled = false;
+      }
+    }
+
+    // Allow Enter key on name input to proceed
+    document.addEventListener('DOMContentLoaded', () => {
+      const nameInput = document.getElementById('upload-name-input');
+      if (nameInput) {
+        nameInput.addEventListener('keydown', e => {
+          if (e.key === 'Enter') submitUpload();
+        });
+      }
     });
-  }
-});
 
-// =============================================
-// SHUTDOWN
-// =============================================
-function openShutdownConfirm() {
-  document.getElementById('shutdown-overlay').classList.add('active');
-}
+    // =============================================
+    // SHUTDOWN
+    // =============================================
+    function openShutdownConfirm() {
+      document.getElementById('shutdown-overlay').classList.add('active');
+    }
 
-function closeShutdownConfirm() {
-  document.getElementById('shutdown-overlay').classList.remove('active');
-}
+    function closeShutdownConfirm() {
+      document.getElementById('shutdown-overlay').classList.remove('active');
+    }
 
-async function confirmShutdown() {
-  document.getElementById('shutdown-overlay').classList.remove('active');
-  try {
-    await fetch(`${API_URL}/shutdown`, { method: 'POST' });
-  } catch(e) {}
-  // Tampilkan pesan shutdown di UI
-  document.body.innerHTML = `
+    async function confirmShutdown() {
+      document.getElementById('shutdown-overlay').classList.remove('active');
+      try {
+        await fetch(`${API_URL}/shutdown`, { method: 'POST' });
+      } catch (e) { }
+      // Tampilkan pesan shutdown di UI
+      document.body.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;
                 background:#050a0f;font-family:'Orbitron',monospace;flex-direction:column;gap:24px">
       <div style="font-size:64px;animation:spin 2s linear infinite">⏻</div>
@@ -1151,54 +2221,55 @@ async function confirmShutdown() {
       <div style="font-size:12px;color:#4a7a9b;letter-spacing:2px">Server telah dihentikan. Tutup halaman ini.</div>
       <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
     </div>`;
-}
+    }
 
-// =============================================
-// PTZ CONTROL (BACKEND ONLY)
-// =============================================
-let ptzSpeed = 1;
+    // =============================================
+    // PTZ CONTROL (BACKEND ONLY)
+    // =============================================
+    let ptzSpeed = 1;
 
-function sendPTZCommand(action) {
-  try {
-    fetch(`${API_URL}/ptz`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action, speed: ptzSpeed })
+    function sendPTZCommand(action) {
+      try {
+        fetch(`${API_URL}/ptz`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, speed: ptzSpeed })
+        });
+      } catch (e) { console.warn('PTZ error:', e); }
+    }
+
+    function resetPTZ() {
+      try {
+        fetch(`${API_URL}/ptz`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'reset' })
+        });
+      } catch (e) { }
+    }
+
+    // Keyboard PTZ shortcuts (arrow keys + +/- ketika kamera aktif)
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      const map = {
+        'ArrowLeft': 'left',
+        'ArrowRight': 'right',
+        'ArrowUp': 'up',
+        'ArrowDown': 'down',
+        '+': 'zoom_in',
+        '=': 'zoom_in',
+        '-': 'zoom_out',
+        '_': 'zoom_out',
+        'h': 'reset',
+        'H': 'reset',
+      };
+      if (map[e.key]) {
+        e.preventDefault();
+        if (e.key === 'h' || e.key === 'H') { resetPTZ(); return; }
+        sendPTZCommand(map[e.key]);
+      }
     });
-  } catch(e) { console.warn('PTZ error:', e); }
-}
-
-function resetPTZ() {
-  try {
-    fetch(`${API_URL}/ptz`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'reset' })
-    });
-  } catch(e) {}
-}
-
-// Keyboard PTZ shortcuts (arrow keys + +/- ketika kamera aktif)
-document.addEventListener('keydown', (e) => {
-  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
-  const map = {
-    'ArrowLeft':  'left',
-    'ArrowRight': 'right',
-    'ArrowUp':    'up',
-    'ArrowDown':  'down',
-    '+':          'zoom_in',
-    '=':          'zoom_in',
-    '-':          'zoom_out',
-    '_':          'zoom_out',
-    'h':          'reset',
-    'H':          'reset',
-  };
-  if (map[e.key]) {
-    e.preventDefault();
-    if (e.key === 'h' || e.key === 'H') { resetPTZ(); return; }
-    sendPTZCommand(map[e.key]);
-  }
-});
-</script>
+  </script>
 </body>
+
 </html>

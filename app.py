@@ -15,28 +15,34 @@ from werkzeug.utils import secure_filename
 import sys
 import signal
 
+try:
+    import tensorflow as tf
+    TF_AVAILABLE = True
+except ImportError:
+    TF_AVAILABLE = False
+
 # Telegram Bot
-import asyncio
-from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+# import asyncio
+# from telegram import Update
+# from telegram.ext import (
+#     Application,
+#     CommandHandler,
+#     ContextTypes,
+#     MessageHandler,
+#     filters,
+# )
 
 # =========================
 # KONFIGURASI TELEGRAM BOT
 # =========================
 # Isi token dari @BotFather
-BOT_TOKEN = "8793475313:AAFJDA5zi4WP8P2hCIBHxVLxo9LWu0XXjng"
+# BOT_TOKEN = "8793475313:AAFJDA5zi4WP8P2hCIBHxVLxo9LWu0XXjng"
 
 # Kosongkan [] = semua orang bisa akses
 # Isi dengan chat_id tertentu untuk batasi akses
 # Cara cari chat_id: kirim pesan ke bot lalu buka
 # https://api.telegram.org/bot<TOKEN>/getUpdates
-ALLOWED_CHAT_IDS = []
+# ALLOWED_CHAT_IDS = []
 
 # =========================
 # FLASK APP SETUP
@@ -67,6 +73,29 @@ def is_video_file(filename):
 # =========================
 face_app = FaceAnalysis(name="buffalo_l")
 face_app.prepare(ctx_id=0, det_size=(640, 640))
+
+# =========================
+# TENSORFLOW CLASSIFIER
+# =========================
+tf_model = None
+tf_labels = None
+
+def load_tf_model():
+    global tf_model, tf_labels
+    if not TF_AVAILABLE:
+        print("[TF] TensorFlow tidak tersedia. Install: pip install tensorflow")
+        return
+    try:
+        if os.path.exists("face_classifier.h5") and os.path.exists("face_labels.npy"):
+            tf_model = tf.keras.models.load_model("face_classifier.h5")
+            tf_labels = np.load("face_labels.npy", allow_pickle=True)
+            print(f"[TF] Model loaded: {list(tf_labels)}")
+        else:
+            print("[TF] Model belum ada. Jalankan train_model.py setelah mendaftarkan wajah.")
+    except Exception as e:
+        print(f"[TF] Gagal load model: {e}")
+
+load_tf_model()
 
 # Default ke kamera 0 (kamera PC/Laptop)
 current_cam_id = 0
@@ -301,9 +330,11 @@ def write_daily_log(name, status, action):
 known_db = {}
 unknown_db = {}
 unknown_best_blur_scores = {}
+db_version = 0
 
 def load_all_db():
-    global known_db, unknown_db, unknown_best_blur_scores
+    global known_db, unknown_db, unknown_best_blur_scores, db_version
+    db_version += 1
     known_db = {}
     if os.path.exists(base_path):
         for person in os.listdir(base_path):
@@ -375,6 +406,7 @@ def update_state_for_ui():
     state_for_ui["active_sessions"] = {k: v for k, v in active_sessions.items()}
     state_for_ui["known_db"] = list(known_db.keys())
     state_for_ui["unknown_db"] = list(unknown_db.keys())
+    state_for_ui["db_version"] = db_version
     state_for_ui["scan_progress"] = {
         "name": scan_name,
         "captured": list(captured),
@@ -651,6 +683,26 @@ def register_upload():
     })
 
 
+@app.route("/retrain", methods=["POST"])
+def retrain_tf_model():
+    """Retrain TF classifier dari data known_faces yang ada."""
+    def do_retrain():
+        import subprocess
+        print("[TF] Memulai retrain...")
+        result = subprocess.run(
+            [sys.executable, "train_model.py"],
+            capture_output=True, text=True,
+            cwd=os.path.dirname(os.path.abspath(__file__))
+        )
+        print(result.stdout)
+        if result.returncode == 0:
+            load_tf_model()
+            print("[TF] Retrain selesai, model diperbarui.")
+        else:
+            print(f"[TF] Retrain gagal:\n{result.stderr}")
+    threading.Thread(target=do_retrain, daemon=True).start()
+    return jsonify({"ok": True, "message": "Retrain TF model dimulai di background. Cek terminal untuk progress."})
+
 @app.route("/shutdown", methods=["POST"])
 def shutdown_system():
     """Matikan seluruh sistem (Flask + main loop)."""
@@ -692,170 +744,170 @@ def run_flask():
 # TELEGRAM BOT
 # =========================
 
-def tg_get_log_path():
-    """Kembalikan path log hari ini, None jika tidak ada."""
-    now = datetime.now()
-    month_dir = os.path.join("logs", f"Log_{now.strftime('%Y-%m')}")
-    file_name  = f"{now.strftime('%Y-%m-%d')}.txt"
-    file_path  = os.path.join(month_dir, file_name)
-    return file_path if os.path.exists(file_path) else None
+# def tg_get_log_path():
+#     """Kembalikan path log hari ini, None jika tidak ada."""
+#     now = datetime.now()
+#     month_dir = os.path.join("logs", f"Log_{now.strftime('%Y-%m')}")
+#     file_name  = f"{now.strftime('%Y-%m-%d')}.txt"
+#     file_path  = os.path.join(month_dir, file_name)
+#     return file_path if os.path.exists(file_path) else None
 
-def tg_is_allowed(chat_id: int) -> bool:
-    if not ALLOWED_CHAT_IDS:
-        return True
-    return chat_id in ALLOWED_CHAT_IDS
+# def tg_is_allowed(chat_id: int) -> bool:
+#     if not ALLOWED_CHAT_IDS:
+#         return True
+#     return chat_id in ALLOWED_CHAT_IDS
 
-async def tg_cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not tg_is_allowed(update.effective_chat.id):
-        await update.message.reply_text("⛔ Akses ditolak.")
-        return
-    await update.message.reply_text(
-        "👁 *Face Recognition System — Bot Aktif*\n\n"
-        "Perintah yang tersedia:\n"
-        "/laporan  — Kirim file log deteksi hari ini\n"
-        "/penyusup — Lihat foto wajah yang tidak dikenali\n"
-        "/status   — Cek status sistem\n"
-        "/help     — Tampilkan bantuan ini",
-        parse_mode="Markdown"
-    )
+# async def tg_cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     if not tg_is_allowed(update.effective_chat.id):
+#         await update.message.reply_text("⛔ Akses ditolak.")
+#         return
+#     await update.message.reply_text(
+#         "👁 *Face Recognition System — Bot Aktif*\n\n"
+#         "Perintah yang tersedia:\n"
+#         "/laporan  — Kirim file log deteksi hari ini\n"
+#         "/penyusup — Lihat foto wajah yang tidak dikenali\n"
+#         "/status   — Cek status sistem\n"
+#         "/help     — Tampilkan bantuan ini",
+#         parse_mode="Markdown"
+#     )
 
-async def tg_cmd_laporan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not tg_is_allowed(update.effective_chat.id):
-        await update.message.reply_text("⛔ Akses ditolak.")
-        return
+# async def tg_cmd_laporan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     if not tg_is_allowed(update.effective_chat.id):
+#         await update.message.reply_text("⛔ Akses ditolak.")
+#         return
 
-    log_path = tg_get_log_path()
-    if log_path is None:
-        await update.message.reply_text(
-            "📭 Belum ada log untuk hari ini.\n"
-            "Sistem mencatat aktivitas saat mode *RUN* aktif.",
-            parse_mode="Markdown"
-        )
-        return
+#     log_path = tg_get_log_path()
+#     if log_path is None:
+#         await update.message.reply_text(
+#             "📭 Belum ada log untuk hari ini.\n"
+#             "Sistem mencatat aktivitas saat mode *RUN* aktif.",
+#             parse_mode="Markdown"
+#         )
+#         return
 
-    await update.message.reply_text("⏳ Mengambil laporan, harap tunggu...")
-    try:
-        now     = datetime.now()
-        caption = (
-            f"📋 *Log Harian Face Recognition*\n"
-            f"🗓 {now.strftime('%d %B %Y')}\n"
-            f"🕐 Dikirim pukul {now.strftime('%H:%M:%S')}"
-        )
-        with open(log_path, "rb") as f:
-            await context.bot.send_document(
-                chat_id=update.effective_chat.id,
-                document=f,
-                filename=os.path.basename(log_path),
-                caption=caption,
-                parse_mode="Markdown"
-            )
-    except Exception as e:
-        await update.message.reply_text(f"❌ Gagal mengirim log: {e}")
+#     await update.message.reply_text("⏳ Mengambil laporan, harap tunggu...")
+#     try:
+#         now     = datetime.now()
+#         caption = (
+#             f"📋 *Log Harian Face Recognition*\n"
+#             f"🗓 {now.strftime('%d %B %Y')}\n"
+#             f"🕐 Dikirim pukul {now.strftime('%H:%M:%S')}"
+#         )
+#         with open(log_path, "rb") as f:
+#             await context.bot.send_document(
+#                 chat_id=update.effective_chat.id,
+#                 document=f,
+#                 filename=os.path.basename(log_path),
+#                 caption=caption,
+#                 parse_mode="Markdown"
+#             )
+#     except Exception as e:
+#         await update.message.reply_text(f"❌ Gagal mengirim log: {e}")
 
-async def tg_cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not tg_is_allowed(update.effective_chat.id):
-        await update.message.reply_text("⛔ Akses ditolak.")
-        return
+# async def tg_cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     if not tg_is_allowed(update.effective_chat.id):
+#         await update.message.reply_text("⛔ Akses ditolak.")
+#         return
 
-    now            = datetime.now()
-    jumlah_dikenal = len(known_db)
-    jumlah_unknown = len(unknown_db)
-    sesi_aktif     = len(active_sessions)
-    log_path       = tg_get_log_path()
+#     now            = datetime.now()
+#     jumlah_dikenal = len(known_db)
+#     jumlah_unknown = len(unknown_db)
+#     sesi_aktif     = len(active_sessions)
+#     log_path       = tg_get_log_path()
 
-    jumlah_log = 0
-    if log_path:
-        with open(log_path, "r") as f:
-            jumlah_log = sum(1 for _ in f)
+#     jumlah_log = 0
+#     if log_path:
+#         with open(log_path, "r") as f:
+#             jumlah_log = sum(1 for _ in f)
 
-    await update.message.reply_text(
-        f"🖥 *Status Sistem Face Recognition*\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"🔄 Mode saat ini   : `{mode}`\n"
-        f"📷 Kamera aktif    : `{current_cam_id}`\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 Wajah terdaftar : `{jumlah_dikenal}` orang\n"
-        f"❓ Wajah unknown   : `{jumlah_unknown}` orang\n"
-        f"🟢 Sesi aktif      : `{sesi_aktif}` orang\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"📝 Log hari ini    : `{jumlah_log}` baris\n"
-        f"🕐 Waktu server    : `{now.strftime('%H:%M:%S')}`",
-        parse_mode="Markdown"
-    )
+#     await update.message.reply_text(
+#         f"🖥 *Status Sistem Face Recognition*\n"
+#         f"━━━━━━━━━━━━━━━━━━━━\n"
+#         f"🔄 Mode saat ini   : `{mode}`\n"
+#         f"📷 Kamera aktif    : `{current_cam_id}`\n"
+#         f"━━━━━━━━━━━━━━━━━━━━\n"
+#         f"👤 Wajah terdaftar : `{jumlah_dikenal}` orang\n"
+#         f"❓ Wajah unknown   : `{jumlah_unknown}` orang\n"
+#         f"🟢 Sesi aktif      : `{sesi_aktif}` orang\n"
+#         f"━━━━━━━━━━━━━━━━━━━━\n"
+#         f"📝 Log hari ini    : `{jumlah_log}` baris\n"
+#         f"🕐 Waktu server    : `{now.strftime('%H:%M:%S')}`",
+#         parse_mode="Markdown"
+#     )
 
-async def tg_cmd_penyusup(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not tg_is_allowed(update.effective_chat.id):
-        await update.message.reply_text("⛔ Akses ditolak.")
-        return
+# async def tg_cmd_penyusup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     if not tg_is_allowed(update.effective_chat.id):
+#         await update.message.reply_text("⛔ Akses ditolak.")
+#         return
 
-    if not os.path.exists(unknown_path) or not os.listdir(unknown_path):
-        await update.message.reply_text("✅ Aman! Belum ada penyusup yang terdeteksi.")
-        return
+#     if not os.path.exists(unknown_path) or not os.listdir(unknown_path):
+#         await update.message.reply_text("✅ Aman! Belum ada penyusup yang terdeteksi.")
+#         return
 
-    await update.message.reply_text("⏳ Memuat maksimal 10 foto penyusup terbaru...")
+#     await update.message.reply_text("⏳ Memuat maksimal 10 foto penyusup terbaru...")
 
-    unknown_dirs = [d for d in os.listdir(unknown_path) if os.path.isdir(os.path.join(unknown_path, d))]
+#     unknown_dirs = [d for d in os.listdir(unknown_path) if os.path.isdir(os.path.join(unknown_path, d))]
     
-    unknown_dirs.sort(key=lambda x: os.path.getmtime(os.path.join(unknown_path, x)), reverse=True)
-    unknown_dirs = unknown_dirs[:10]
+#     unknown_dirs.sort(key=lambda x: os.path.getmtime(os.path.join(unknown_path, x)), reverse=True)
+#     unknown_dirs = unknown_dirs[:10]
     
-    count = 0
-    for uid in unknown_dirs:
-        img_path = os.path.join(unknown_path, uid, "face.jpg")
-        if os.path.exists(img_path):
-            try:
-                with open(img_path, "rb") as f:
-                    await context.bot.send_photo(
-                        chat_id=update.effective_chat.id,
-                        photo=f,
-                        caption=f"🚨 *Penyusup Terbaru: {uid}*",
-                        parse_mode="Markdown"
-                    )
-                count += 1
-            except Exception as e:
-                print(f"Gagal mengirim foto {uid}: {e}")
+#     count = 0
+#     for uid in unknown_dirs:
+#         img_path = os.path.join(unknown_path, uid, "face.jpg")
+#         if os.path.exists(img_path):
+#             try:
+#                 with open(img_path, "rb") as f:
+#                     await context.bot.send_photo(
+#                         chat_id=update.effective_chat.id,
+#                         photo=f,
+#                         caption=f"🚨 *Penyusup Terbaru: {uid}*",
+#                         parse_mode="Markdown"
+#                     )
+#                 count += 1
+#             except Exception as e:
+#                 print(f"Gagal mengirim foto {uid}: {e}")
 
-    if count == 0:
-        await update.message.reply_text("⚠️ Folder ada, tetapi data foto tidak ditemukan.")
-    else:
-        await update.message.reply_text(f"✅ Selesai menampilkan {count} foto penyusup terbaru.")
+#     if count == 0:
+#         await update.message.reply_text("⚠️ Folder ada, tetapi data foto tidak ditemukan.")
+#     else:
+#         await update.message.reply_text(f"✅ Selesai menampilkan {count} foto penyusup terbaru.")
 
 
-async def tg_cmd_bantuan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "📖 *Daftar Perintah*\n\n"
-        "/start    — Salam pembuka\n"
-        "/laporan  — Kirim file log hari ini (.txt)\n"
-        "/penyusup — Lihat 10 foto wajah penyusup terbaru\n"
-        "/status   — Info sistem (mode, wajah, sesi aktif)\n"
-        "/help     — Tampilkan pesan ini",
-        parse_mode="Markdown"
-    )
+# async def tg_cmd_bantuan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     await update.message.reply_text(
+#         "📖 *Daftar Perintah*\n\n"
+#         "/start    — Salam pembuka\n"
+#         "/laporan  — Kirim file log hari ini (.txt)\n"
+#         "/penyusup — Lihat 10 foto wajah penyusup terbaru\n"
+#         "/status   — Info sistem (mode, wajah, sesi aktif)\n"
+#         "/help     — Tampilkan pesan ini",
+#         parse_mode="Markdown"
+#     )
 
-async def tg_handler_pesan_biasa(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not tg_is_allowed(update.effective_chat.id):
-        return
-    await update.message.reply_text(
-        "❓ Perintah tidak dikenali. Ketik /help untuk melihat daftar perintah."
-    )
+# async def tg_handler_pesan_biasa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     if not tg_is_allowed(update.effective_chat.id):
+#         return
+#     await update.message.reply_text(
+#         "❓ Perintah tidak dikenali. Ketik /help untuk melihat daftar perintah."
+#     )
 
-def run_telegram_bot():
-    """Jalankan Telegram bot di event loop tersendiri (non-blocking terhadap main loop)."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+# def run_telegram_bot():
+#     """Jalankan Telegram bot di event loop tersendiri (non-blocking terhadap main loop)."""
+#     loop = asyncio.new_event_loop()
+#     asyncio.set_event_loop(loop)
 
-    application = Application.builder().token(BOT_TOKEN).build()
-    application.add_handler(CommandHandler("start",   tg_cmd_start))
-    application.add_handler(CommandHandler("laporan", tg_cmd_laporan))
-    application.add_handler(CommandHandler("status",  tg_cmd_status))
-    application.add_handler(CommandHandler("penyusup", tg_cmd_penyusup))
-    application.add_handler(CommandHandler("help", tg_cmd_bantuan))
-    application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, tg_handler_pesan_biasa)
-    )
+#     application = Application.builder().token(BOT_TOKEN).build()
+#     application.add_handler(CommandHandler("start",   tg_cmd_start))
+#     application.add_handler(CommandHandler("laporan", tg_cmd_laporan))
+#     application.add_handler(CommandHandler("status",  tg_cmd_status))
+#     application.add_handler(CommandHandler("penyusup", tg_cmd_penyusup))
+#     application.add_handler(CommandHandler("help", tg_cmd_bantuan))
+#     application.add_handler(
+#         MessageHandler(filters.TEXT & ~filters.COMMAND, tg_handler_pesan_biasa)
+#     )
 
-    print("TELEGRAM BOT AKTIF | Kirim /laporan di Telegram untuk mendapat log")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+#     print("TELEGRAM BOT AKTIF | Kirim /laporan di Telegram untuk mendapat log")
+#     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 # =========================
@@ -864,8 +916,8 @@ def run_telegram_bot():
 flask_thread = threading.Thread(target=run_flask, daemon=True)
 flask_thread.start()
 
-telegram_thread = threading.Thread(target=run_telegram_bot, daemon=True)
-telegram_thread.start()
+# telegram_thread = threading.Thread(target=run_telegram_bot, daemon=True)
+# telegram_thread.start()
 
 print("SISTEM AKTIF | UI SERVER -> Buka http://localhost:5000 di Browser Anda")
 
@@ -911,7 +963,16 @@ while True:
                 counter = {d_: 0 for d_ in ["LEFT", "RIGHT", "UP", "DOWN", "CENTER"]}
                 mode = "SCAN"
 
-        elif c == "reload_db" or c == "set_mode" and d.get("mode") == "RUN":
+        elif c == "reload_db":
+            def bg_cleanup_reload():
+                from cleanup_unknowns import run_cleanup
+                run_cleanup()
+                load_all_db()
+            import threading
+            threading.Thread(target=bg_cleanup_reload, daemon=True).start()
+            mode = "RUN"
+
+        elif c == "set_mode" and d.get("mode") == "RUN":
             load_all_db()
             mode = "RUN"
 
@@ -977,6 +1038,21 @@ while True:
                     score = max(scores)
                     if score > best_score: best_score, best_name = score, person
 
+                if tf_model is not None and tf_labels is not None and known_db:
+                    try:
+                        emb_n = emb / (np.linalg.norm(emb) + 1e-6)
+                        probs = tf_model.predict(emb_n.reshape(1, -1), verbose=0)[0]
+                        tf_idx = int(np.argmax(probs))
+                        tf_conf = float(probs[tf_idx])
+                        tf_name = str(tf_labels[tf_idx])
+                        if tf_conf > 0.65 and tf_name in known_db:
+                            if tf_name == best_name:
+                                best_score = 0.4 * best_score + 0.6 * tf_conf
+                            elif best_score < 0.35:
+                                best_name, best_score = tf_name, tf_conf * 0.8
+                    except Exception:
+                        pass
+
                 display_name, display_score = best_name, best_score
 
                 if best_score < 0.35:
@@ -996,6 +1072,14 @@ while True:
                             np.save(os.path.join(u_dir, "embedding.npy"), emb)
                             unknown_best_blur_scores[u_id_found] = new_blur
                             write_daily_log(u_id_found, "SYSTEM", "UPDATE FOTO")
+                            
+                            # Beri tahu UI bahwa ada update foto agar me-refresh cache gambar
+                            def bg_cleanup_update():
+                                from cleanup_unknowns import run_cleanup
+                                run_cleanup()
+                                load_all_db()
+                            import threading
+                            threading.Thread(target=bg_cleanup_update, daemon=True).start()
                     else:
                         display_name = "Unknown"
                         track_id = f"{round(x1, -1)}_{round(y1, -1)}"
@@ -1015,7 +1099,16 @@ while True:
                                     np.save(os.path.join(u_d, "embedding.npy"), emb)
                                     write_daily_log(u_name, "SYSTEM", "NEW UNKNOWN")
                                     last_unknown_check = time.time()
-                                    load_all_db()
+                                    
+                                    # Jalankan cleanup & reorder di background agar tidak lag
+                                    def bg_cleanup():
+                                        from cleanup_unknowns import run_cleanup
+                                        if run_cleanup():
+                                            load_all_db()
+                                        else:
+                                            load_all_db()
+                                    threading.Thread(target=bg_cleanup, daemon=True).start()
+                                    
                                     display_name = u_name
 
                 present_this_frame.add(display_name)
