@@ -84,4 +84,3 @@ python app.py
 *   **Matikan Program**: Untuk mematikan program, klik di area Terminal lalu tekan tombol **Ctrl + C** di keyboard secara bersamaan.
 
 ---
-*Dibuat dengan ❤️ oleh Antigravity AI Assistant*
