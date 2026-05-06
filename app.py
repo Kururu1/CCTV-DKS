@@ -1,10 +1,39 @@
-import cv2
-import numpy as np
 import os
-import time
+import sys
 import threading
 import base64
+import time
 from datetime import datetime
+import signal
+
+# --- CUDA DLL PATH AUTO-CONFIGURATION (WINDOWS) ---
+# MUST RUN BEFORE ANY ONNXRUNTIME/INSIGHTFACE IMPORTS
+if sys.platform == 'win32':
+    import site
+    # Ambil semua kemungkinan site-packages
+    candidate_paths = site.getsitepackages()
+    if hasattr(site, 'getusersitepackages'):
+        candidate_paths.append(site.getusersitepackages())
+    
+    for sp in candidate_paths:
+        nvidia_path = os.path.join(sp, 'nvidia')
+        if os.path.exists(nvidia_path):
+            for root, dirs, files in os.walk(nvidia_path):
+                if 'bin' in dirs:
+                    bin_dir = os.path.join(root, 'bin')
+                    if any(f.lower().endswith('.dll') for f in os.listdir(bin_dir)):
+                        try:
+                            # Menambahkan ke DLL directory (Python 3.8+)
+                            os.add_dll_directory(bin_dir)
+                            # Menambahkan ke PATH (untuk beberapa library lama/statis)
+                            os.environ['PATH'] = bin_dir + os.pathsep + os.environ['PATH']
+                            print(f"[CUDA] Menambahkan path DLL: {bin_dir}")
+                        except Exception:
+                            pass
+# --------------------------------------------------
+
+import cv2
+import numpy as np
 from insightface.app import FaceAnalysis
 import requests
 
@@ -12,8 +41,6 @@ import requests
 from flask import Flask, Response, jsonify, request, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-import sys
-import signal
 
 try:
     import tensorflow as tf
@@ -69,8 +96,9 @@ def is_video_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXT
 
 # =========================
-# INIT MODEL
+# INIT MODEL (HARDWARE ACCEL)
 # =========================
+current_provider = "NVIDIA GPU"
 face_app = FaceAnalysis(name="buffalo_l")
 face_app.prepare(ctx_id=0, det_size=(640, 640))
 
@@ -407,6 +435,7 @@ def update_state_for_ui():
     state_for_ui["known_db"] = list(known_db.keys())
     state_for_ui["unknown_db"] = list(unknown_db.keys())
     state_for_ui["db_version"] = db_version
+    state_for_ui["provider"] = current_provider
     state_for_ui["scan_progress"] = {
         "name": scan_name,
         "captured": list(captured),
@@ -461,6 +490,37 @@ def post_command():
     with ui_command_lock:
         ui_command = body
     return jsonify({"ok": True})
+
+@app.route("/toggle_provider", methods=["POST"])
+def toggle_provider():
+    global current_provider
+    data = request.json
+    target = data.get("provider", "NVIDIA GPU")
+    
+    # Cegah double-request jika sedang switching
+    if "SWITCHING" in current_provider:
+        return jsonify({"ok": False, "error": "Switching in progress..."})
+
+    prev_provider = current_provider
+    current_provider = f"SWITCHING TO {target}..."
+    
+    def do_reload():
+        global face_app, current_provider
+        ctx_id = 0 if "GPU" in target else -1
+        try:
+            print(f"[SYSTEM] Reloading models to {target}...")
+            # Re-inisialisasi app baru agar bersih
+            new_app = FaceAnalysis(name="buffalo_l")
+            new_app.prepare(ctx_id=ctx_id, det_size=(640, 640))
+            face_app = new_app
+            current_provider = target
+            print(f"[SYSTEM] Hardware acceleration successfully switched to: {current_provider}")
+        except Exception as e:
+            print(f"[SYSTEM] Failed to switch provider: {e}")
+            current_provider = prev_provider # Rollback status
+
+    threading.Thread(target=do_reload, daemon=True).start()
+    return jsonify({"ok": True, "provider": current_provider})
 
 # --- PERBAIKAN PENGIRIMAN GAMBAR (RAW JPEG) ---
 @app.route("/unknown_image/<uid>")
@@ -903,21 +963,15 @@ def run_flask():
 #     application.add_handler(CommandHandler("penyusup", tg_cmd_penyusup))
 #     application.add_handler(CommandHandler("help", tg_cmd_bantuan))
 #     application.add_handler(
-#         MessageHandler(filters.TEXT & ~filters.COMMAND, tg_handler_pesan_biasa)
-#     )
-
-#     print("TELEGRAM BOT AKTIF | Kirim /laporan di Telegram untuk mendapat log")
-#     application.run_polling(allowed_updates=Update.ALL_TYPES)
-
+#         MessageHandler(fdef run_flask():
+    """Jalankan Flask di thread terpisah."""
+    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
 
 # =========================
 # MAIN LOOP
 # =========================
 flask_thread = threading.Thread(target=run_flask, daemon=True)
 flask_thread.start()
-
-# telegram_thread = threading.Thread(target=run_telegram_bot, daemon=True)
-# telegram_thread.start()
 
 print("SISTEM AKTIF | UI SERVER -> Buka http://localhost:5000 di Browser Anda")
 
@@ -1073,7 +1127,6 @@ while True:
                             unknown_best_blur_scores[u_id_found] = new_blur
                             write_daily_log(u_id_found, "SYSTEM", "UPDATE FOTO")
                             
-                            # Beri tahu UI bahwa ada update foto agar me-refresh cache gambar
                             def bg_cleanup_update():
                                 from cleanup_unknowns import run_cleanup
                                 run_cleanup()
@@ -1100,15 +1153,11 @@ while True:
                                     write_daily_log(u_name, "SYSTEM", "NEW UNKNOWN")
                                     last_unknown_check = time.time()
                                     
-                                    # Jalankan cleanup & reorder di background agar tidak lag
                                     def bg_cleanup():
                                         from cleanup_unknowns import run_cleanup
-                                        if run_cleanup():
-                                            load_all_db()
-                                        else:
-                                            load_all_db()
+                                        run_cleanup()
+                                        load_all_db()
                                     threading.Thread(target=bg_cleanup, daemon=True).start()
-                                    
                                     display_name = u_name
 
                 present_this_frame.add(display_name)
@@ -1141,7 +1190,6 @@ while True:
 
     state_for_ui["faces"] = faces_for_ui
 
-    # Apply software digital PTZ (zoom + pan) if hardware not available
     if not ptz_state["hw_supported"]:
         with ptz_lock:
             s_zoom = soft_ptz["zoom"]
@@ -1154,5 +1202,6 @@ while True:
         with frame_lock:
             latest_frame_jpg = jpg_buf.tobytes()
     
+    time.sleep(0.01) # Little sleep to avoid 100% CPU
 
 cap.release()
