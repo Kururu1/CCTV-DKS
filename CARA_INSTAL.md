@@ -1,4 +1,4 @@
-# 🛠️ Panduan Instalasi Manual CCTV-DKS (Sangat Mudah!)
+# 🛠️ Panduan Instalasi Manual**MUKIDI** (**M**onitoring **U**ser **K**amera **I**dentification **D**etector **I**ntruder) (Sangat Mudah!)
 
 Halo! Panduan ini dibuat khusus untuk Anda yang masih sangat awam. Kita akan menggunakan bantuan **Antigravity** agar prosesnya lebih mudah dipantau.
 
