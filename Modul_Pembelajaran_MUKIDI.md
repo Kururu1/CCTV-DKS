@@ -1,6 +1,6 @@
 # 🤖 MUKIDI — Modul Pembelajaran Sistem Pengenalan Wajah Berbasis AI
 
-> **MUKIDI** = (Monitoring User Kamera Identification Detector Intruder)  
+> **MUKIDI** = *M*onitoring *U*ser *K*amera *I*dentification *D*etector *I*ntruder)  
 > Sistem cerdas yang dapat mengenali wajah manusia secara otomatis menggunakan kecerdasan buatan (AI).
 
 ---
