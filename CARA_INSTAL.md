@@ -1,6 +1,6 @@
 # 🛠️ Panduan Instalasi Manual CCTV-DKS (Sangat Mudah!)
 
-Halo! Panduan ini dibuat khusus untuk Anda yang masih sangat awam. Kita akan menggunakan **VS Code** agar prosesnya lebih mudah dipantau.
+Halo! Panduan ini dibuat khusus untuk Anda yang masih sangat awam. Kita akan menggunakan bantuan **Antigravity** agar prosesnya lebih mudah dipantau.
 
 Ikuti langkah-langkah di bawah ini pelan-pelan ya.
 
@@ -12,29 +12,26 @@ Ikuti langkah-langkah di bawah ini pelan-pelan ya.
 *   Download di sini: [Python 3.10.11](https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe)
 *   **PENTING**: Saat instal, **WAJIB CENTANG** kotak `Add Python 3.10 to PATH` sebelum klik *Install Now*. Jika lupa, program tidak akan jalan.
 
-### 2. Install VS Code & Git
-*   **VS Code**: [code.visualstudio.com](https://code.visualstudio.com/)
+### 2. Persiapkan Antigravity & Git
+*   **Antigravity**: Pastikan Anda sudah membuka folder project di dalam **Antigravity**.
 *   **Git**: [git-scm.com](https://git-scm.com/download/win) (Pilih Windows Setup). Ini gunanya untuk mendownload file project secara otomatis.
 
 ---
 
-## 🚀 Langkah Instalasi (Lewat VS Code)
+## 🚀 Langkah Instalasi (Lewat Antigravity)
 
 ### 1. Mendownload File Project (Git Clone)
-1.  Buka **Visual Studio Code**.
-2.  Klik menu **Terminal** > **New Terminal**.
-3.  Di jendela Terminal (bagian bawah), ketik perintah ini untuk mengambil semua file program:
+1.  Buka **Antigravity**.
+2.  Buka **Terminal** (biasanya ada di bagian bawah atau melalui menu Terminal).
+3.  Di jendela Terminal, ketik perintah ini untuk mengambil semua file program:
     ```powershell
     git clone https://github.com/Kururu1/CCTV-DKS.git
     ```
-4.  Setelah selesai, klik menu **File** > **Open Folder...**.
-5.  Pilih folder bernama `CCTV-DKS` yang baru saja muncul.
-6.  Klik **Select Folder**.
+4.  Setelah selesai, buka folder bernama `CCTV-DKS` yang baru saja muncul di **Antigravity**.
 
 ### 2. Buka Terminal Baru di Dalam Folder
 Setelah folder terbuka, kita harus membuka Terminal lagi agar posisinya benar di dalam folder project:
-1.  Klik menu **Terminal** > **New Terminal**.
-2.  Pastikan di sebelah kiri kursor Terminal muncul tulisan `...\CCTV-DKS>`.
+1.  Pastikan di sebelah kiri kursor Terminal muncul tulisan `...\CCTV-DKS>`.
 
 ### 3. Membuat Lingkungan Virtual (Virtual Environment)
 Ketik perintah di bawah ini dan tekan **Enter**:
@@ -79,8 +76,9 @@ python app.py
 ---
 
 ## 💡 Tips untuk Pemula
-*   **Copy-Paste**: Di Terminal VS Code, Anda bisa copy teks di sini dan paste di Terminal dengan cara **Klik Kanan** pada mouse di area terminal.
-*   **Jika Gagal Clone**: Jika `git clone` sulit, Anda bisa download manual via tombol hijau **"Code"** > **"Download ZIP"** di link GitHub tersebut, lalu ekstrak dan buka foldernya di VS Code.
+*   **Copy-Paste**: Di Terminal **Antigravity**, Anda bisa copy teks di sini dan paste di Terminal dengan cara **Klik Kanan** pada mouse di area terminal.
+*   **Jika Gagal Clone**: Jika `git clone` sulit, Anda bisa download manual via tombol hijau **"Code"** > **"Download ZIP"** di link GitHub tersebut, lalu ekstrak dan buka foldernya di **Antigravity**.
 *   **Matikan Program**: Untuk mematikan program, klik di area Terminal lalu tekan tombol **Ctrl + C** di keyboard secara bersamaan.
 
 ---
+*Dibuat dengan ❤️ oleh Antigravity AI Assistant*
